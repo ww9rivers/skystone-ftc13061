@@ -47,11 +47,14 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * This hardware class assumes the following device names have been configured on the robot:
  * Note:  All names are lower case and some have single spaces between words.
  *
- * Motor channel:  Left  drive motor:        "left_drive"
- * Motor channel:  Right drive motor:        "right_drive"
- * Motor channel:  Manipulator drive motor:  "left_arm"
- * Servo channel:  Servo to open left claw:  "left_hand"
- * Servo channel:  Servo to open right claw: "right_hand"
+ * Motor channel: Left  drive motor:         "left_drive"
+ * Motor channel: Right drive motor:         "right_drive"
+ * Motor channel: Manipulator drive motor:   "left_arm"
+ * Servo channel: Servo to open left claw:   "left_hand"
+ * Servo channel: Servo to open right claw:  "right_hand"
+ * Color Sensor:  REV color/distance sensor: "colro_sencor"
+ *
+ * Reference: org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot
  */
 public class RobotConfig
 {
@@ -63,6 +66,7 @@ public class RobotConfig
     public Servo            rightClaw       = null;
     public ColorSensor      sensorColor     = null;
     public DistanceSensor   sensorDistance  = null;
+    public ElapsedTime      runtime         = new ElapsedTime();
 
     public static final double MID_SERVO       =  0.5 ;
     public static final double ARM_UP_POWER    =  0.45 ;
@@ -70,7 +74,6 @@ public class RobotConfig
 
     /* local OpMode members. */
     HardwareMap hwMap           = null;
-    private ElapsedTime period  = new ElapsedTime();
 
     private Boolean production  = false;
 
@@ -88,6 +91,7 @@ public class RobotConfig
      * @param  opmode    OpMode initializing this robot.
      */
     public RobotConfig init(OpMode opmode) {
+        opmode.telemetry.addData("Status", "Initialized");
         hwMap = opmode.hardwareMap;
 
         // Define and Initialize Motors
@@ -133,5 +137,8 @@ public class RobotConfig
         }
         opmode.telemetry.update();
         return this;
+    }
+    public void start () {
+        runtime.reset();
     }
 }

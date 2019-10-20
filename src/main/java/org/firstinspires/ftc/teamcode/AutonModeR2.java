@@ -49,8 +49,8 @@ import com.qualcomm.robotcore.util.Range;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="AutonMode: Iterative OpMode", group="Iterative Opmode")
-public class AutonMode extends OpMode
+@Autonomous(name="AutonModeR2: Red 2", group="Iterative Opmode")
+public class AutonModeR2 extends OpMode
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
