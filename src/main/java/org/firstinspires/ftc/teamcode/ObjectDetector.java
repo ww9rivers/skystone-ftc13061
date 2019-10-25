@@ -4,38 +4,21 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 import java.util.List;
+
+import static org.firstinspires.ftc.teamcode.Vuforia.*;
 
 public class ObjectDetector {
     private static final String TFOD_MODEL_ASSET = "Skystone.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Stone";
     private static final String LABEL_SECOND_ELEMENT = "Skystone";
 
-    /*
-     * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
-     * 'parameters.vuforiaLicenseKey' is initialized is for illustration only, and will not function.
-     * A Vuforia 'Development' license key, can be obtained free of charge from the Vuforia developer
-     * web site at https://developer.vuforia.com/license-manager.
-     *
-     * Vuforia license keys are always 380 characters long, and look as if they contain mostly
-     * random data. As an example, here is a example of a fragment of a valid key:
-     *      ... yIgIzTqZ4mWjk9wd3cZO9T1axEqzuhxoGlfOOI2dRzKS4T0hQ8kT ...
-     * Once you've obtained a license key, copy the string from the Vuforia web site
-     * and paste it in to your code on the next line, between the double quotes.
-     */
-    // 2018-04-22 — robotics@annhua.org
-    private static final String VUFORIA_KEY = "AbPc14P/////AAABmZuZNgh3mUvnsRr1h9FPQO4Y+RlkIDvh83ytAED4SQKx/DkIDT9Qwzje2wZTuoLFym2U1VylmNq0IWYAzGGlHfvydR8MPg/KiYBMnzbgApDJlvoScnXtGH8S0NVrBN3erxZFkmOBhmBsXWOoGu7I2wziurj+XRN0j3pp6p1KwJ++B3xpMWupPGD/j2cCk6wrKXt+l201axgWmBDJ7BfeI8CdptUcbltnBE2ouPl68MH/cU7Xw2n7COfReWNGtNvjpiE6vnZWnMJilnIffDSxnCdcZUk4rBaN4bdGE6yJpkISVzKG3qd8SEJr/DQZ/3S19uLa/D3yAd/aTLOwAq2mjZMk+hoS8ssUNtL1Yab7N1Ge";
-
-    /**
-     * {@link #vuforia} is the variable we will use to store our instance of the Vuforia
-     * localization engine.
-     */
-    private VuforiaLocalizer vuforia = null;
+    VuforiaLocalizer vuforia = null;
 
     /**
      * {@link #tfod} is the variable we will use to store our instance of the TensorFlow Object
@@ -49,7 +32,7 @@ public class ObjectDetector {
         telemetry = opmode.telemetry;
         // The TFObjectDetector uses the camera frames from the VuforiaLocalizer, so we create that
         // first.
-        if (vuforia == null) { initVuforia(); }
+        if (vuforia == null) { vuforia = getInstance(); }
 
         if (ClassFactory.getInstance().canCreateTFObjectDetector()) {
             initTfod(opmode.hardwareMap);
@@ -95,24 +78,6 @@ public class ObjectDetector {
             }
         }
         return updatedRecognitions;
-    }
-
-    /**
-     * Initialize the Vuforia localization engine.
-     */
-    private void initVuforia() {
-        /*
-         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
-         */
-        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
-
-        parameters.vuforiaLicenseKey = VUFORIA_KEY;
-        parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
-
-        //  Instantiate the Vuforia engine
-        vuforia = ClassFactory.getInstance().createVuforia(parameters);
-
-        // Loading trackables is not necessary for the TensorFlow Object Detection engine.
     }
 
     /**

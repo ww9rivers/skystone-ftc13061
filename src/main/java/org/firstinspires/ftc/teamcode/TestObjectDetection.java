@@ -47,7 +47,7 @@ import java.util.List;
  * is explained below.
  */
 @TeleOp(name = "Concept: TensorFlow Object Detection", group = "Concept")
-public class ConceptTensorFlowObjectDetection extends LinearOpMode {
+public class TestObjectDetection extends LinearOpMode {
 
     private ObjectDetector detector = null;
 
