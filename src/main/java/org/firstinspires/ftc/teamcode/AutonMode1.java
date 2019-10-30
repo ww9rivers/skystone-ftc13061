@@ -27,7 +27,7 @@ import org.firstinspires.ftc.teamcode.Aliance;
 public class AutonMode1 extends OpMode {
     // Declare OpMode members.
     private Aliance.Color aliance = Aliance.Color.RED;
-    RobotConfig robot = new RobotConfig();
+    RobotConfig robot = RobotConfig.init(this);
     private DcMotor leftDrive = null;
     private DcMotor rightDrive = null;
 
@@ -85,17 +85,6 @@ public class AutonMode1 extends OpMode {
     @Override
     public void init() {
         robot.init(this);
-
-        // Initialize the hardware variables. Note that the strings used here as parameters
-        // to 'get' must correspond to the names assigned during the robot configuration
-        // step (using the FTC Robot Controller app on the phone).
-        leftDrive = robot.leftDrive;
-        rightDrive = robot.rightDrive;
-
-        // Most robots need the motor on one side to be reversed to drive forward
-        // Reverse the motor that runs backwards when connected directly to the battery
-        leftDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightDrive.setDirection(DcMotor.Direction.REVERSE);
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");

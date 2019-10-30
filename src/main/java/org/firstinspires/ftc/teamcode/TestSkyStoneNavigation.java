@@ -66,7 +66,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefau
  */
 
 
-@TeleOp(name="SKYSTONE Vuforia Nav", group ="Concept")
+@TeleOp(name="SKYSTONE Vuforia Nav", group ="Test")
 public class TestSkyStoneNavigation extends LinearOpMode {
 
     @Override public void runOpMode() {
