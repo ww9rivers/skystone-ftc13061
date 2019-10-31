@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.Aliance;
 
-/** AutonMode1: 1 Position - This is a library, not an OpMode
+/** AutonMode1: #1 Position - This is a library, not an OpMode
  *
  * This Autonomous opmode assumes that the robot starts in the Red position 1, on the side of the
  * Foundation, facing towards the Foundation. The tasks are:
@@ -119,12 +119,20 @@ public class AutonMode1 extends OpMode {
         }
     }
 
+    /**
+     * Robot is in this state right after start. In Position 1, blue or red.
+     */
     private void move_foundation () {
         telemetry.addData("Status", "Moving foundation");
     }
 
     /**
      *  Park the robot under Skybridge
+     *
+     * 1.  Try to look for the navigation marks to locate self;
+     * 2.  Drive towards the skybridge.
+     * 3.  While driving, try to detect the color using sensor mounted under the robot.
+     * 4.  Stop robot if color is detected.
      */
     private void park () {
         telemetry.addData("Status", "Parking robot");
@@ -143,6 +151,7 @@ public class AutonMode1 extends OpMode {
      */
     @Override
     public void stop() {
+        robot.stop();
     }
 
     private void transport_stone () {
