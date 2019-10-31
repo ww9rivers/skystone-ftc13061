@@ -47,8 +47,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * This hardware class assumes the following device names have been configured on the robot:
  * Note:  All names are lower case and some have single spaces between words.
  *
- * Motor channel: Left  drive motor:         "left_drive"
- * Motor channel: Right drive motor:         "right_drive"
+ * Motor channel: Left front drive motor:    "left_front_motor"
+ * Motor channel: Right front drive motor:   "right_front_motor"
+ * Motor channel: Left rear drive motor:     "left_rear_motor"
+ * Motor channel: Right rear drive motor:    "right_rear_motor"
  * Motor channel: Manipulator drive motor:   "left_arm"
  * Servo channel: Servo to open left claw:   "left_hand"
  * Servo channel: Servo to open right claw:  "right_hand"
@@ -87,10 +89,10 @@ public class RobotConfig implements MecanumDrive
 
         // Define and Initialize Motors
         // These polarities are for the Neverest 20 motors
-        leftFrontMotor = get_motor("lf_drive", DcMotor.Direction.REVERSE);
-        rightFrontMotor = get_motor("rf_drive", DcMotor.Direction.FORWARD);
-        leftRearMotor = get_motor("lr_drive", DcMotor.Direction.REVERSE);
-        rightRearMotor = get_motor("rr_drive", DcMotor.Direction.FORWARD);
+        leftFrontMotor = get_motor("left_front_motor", DcMotor.Direction.FORWARD);
+        rightFrontMotor = get_motor("right_front_motor", DcMotor.Direction.REVERSE);
+        leftRearMotor = get_motor("left_rear_motor", DcMotor.Direction.REVERSE);
+        rightRearMotor = get_motor("right_rear_motor", DcMotor.Direction.FORWARD);
         //leftArm.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Define and initialize ALL installed servos.
@@ -156,6 +158,10 @@ public class RobotConfig implements MecanumDrive
         rightRearMotor.setPower(rr);
     }
     public void manual_drive () {
+        if (rightRearMotor == null) {
+            app.telemetry.addData("Error", "The robot is missing motor.");
+            return;
+        }
         // declare motor speed variables
         double RF; double LF; double RR; double LR;
         // declare joystick position variables
@@ -199,11 +205,21 @@ public class RobotConfig implements MecanumDrive
      * Show run time.
      */
     public void showtime () {
-        app.telemetry.addData("Status", "Run Time: " + runtime.toString());
+        app.telemetry.addData("Run Time", runtime.toString());
         app.telemetry.update();
     }
 
+    /**
+     * Start the robot - reset the runtime to start counting.
+     */
     public void start () {
         runtime.reset();
+    }
+
+    /**
+     * Stop the robot.
+     */
+    public void stop () {
+        drive(0,0,0,0);
     }
 }
