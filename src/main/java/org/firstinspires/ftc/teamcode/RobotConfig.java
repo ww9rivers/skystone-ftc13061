@@ -30,6 +30,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -89,8 +90,8 @@ public class RobotConfig implements MecanumDrive
 
         // Define and Initialize Motors
         // These polarities are for the Neverest 20 motors
-        leftFrontMotor = get_motor("left_front_motor", DcMotor.Direction.FORWARD);
-        rightFrontMotor = get_motor("right_front_motor", DcMotor.Direction.REVERSE);
+        leftFrontMotor = get_motor("left_front_motor", DcMotor.Direction.REVERSE);
+        rightFrontMotor = get_motor("right_front_motor", DcMotor.Direction.FORWARD);
         leftRearMotor = get_motor("left_rear_motor", DcMotor.Direction.REVERSE);
         rightRearMotor = get_motor("right_rear_motor", DcMotor.Direction.FORWARD);
         //leftArm.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -156,9 +157,13 @@ public class RobotConfig implements MecanumDrive
         rightFrontMotor.setPower(rf);
         leftRearMotor.setPower(lr);
         rightRearMotor.setPower(rr);
+        app.telemetry.addData("LF", "%.3f", lf);
+        app.telemetry.addData("RF", "%.3f", rf);
+        app.telemetry.addData("LR", "%.3f", lr);
+        app.telemetry.addData("RR", "%.3f", rr);
     }
     public void manual_drive () {
-        if (rightRearMotor == null) {
+/*        if (rightRearMotor == null) {
             app.telemetry.addData("Error", "The robot is missing motor.");
             return;
         }
@@ -191,16 +196,24 @@ public class RobotConfig implements MecanumDrive
         RF = Math.max(-motorMax, Math.min(RF, motorMax));
         LR = Math.max(-motorMax, Math.min(LR, motorMax));
         RR = Math.max(-motorMax, Math.min(RR, motorMax));
+*/
 
+//     Changed joystick operation: use left joystick to control robot translation, use right joystick to control robot turn.
+
+        double leftX = app.gamepad1.left_stick_x;
+        double leftY = -app.gamepad1.left_stick_y;
+        double r = Math.hypot(leftX, leftY)*motorMax;
+        double robotAngle = Math.atan2(leftY, leftX) - Math.PI / 4;
+        double rightX = app.gamepad1.right_stick_x;
+        final double LF = r * Math.cos(robotAngle) + rightX;
+        final double RF = r * Math.sin(robotAngle) - rightX;
+        final double LR = r * Math.sin(robotAngle) + rightX;
+        final double RR = r * Math.cos(robotAngle) - rightX;
         // Send values to the motors
         drive(LF, RF, LR, RR);
         // Send some useful parameters to the driver station
-        app.telemetry.addData("LF", "%.3f", LF);
-        app.telemetry.addData("RF", "%.3f", RF);
-        app.telemetry.addData("LR", "%.3f", LR);
-        app.telemetry.addData("RR", "%.3f", RR);
+        app.telemetry.addData("gamepad", "x: (%.2f), y: (%.2f) angle: (%.2f)", leftX, leftY, robotAngle*180/Math.PI);
     }
-
     /**
      * Show run time.
      */

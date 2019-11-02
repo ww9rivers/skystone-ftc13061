@@ -85,12 +85,23 @@ public class WheelCheck extends LinearOpMode {
             // Reverse the motor that runs backwards when connected directly to the battery
             if(gamepad1.dpad_left)  //01
                 leftFrontMotor.setPower(1.0);
+            else
+                leftFrontMotor.setPower(0.0);
+
             if(gamepad1.dpad_up)    //02
                 rightFrontMotor.setPower(1.0);
+            else
+                rightFrontMotor.setPower(0.0);
+
             if(gamepad1.dpad_right)  //03
                 leftRearMotor.setPower(1.0);
+            else
+                leftRearMotor.setPower(0.0);
+
             if(gamepad1.dpad_down)   //04
                 rightRearMotor.setPower(1.0);
+            else
+                rightRearMotor.setPower(0.0);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
