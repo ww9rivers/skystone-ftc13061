@@ -20,7 +20,7 @@ public interface MecanumDrive {
     /* Declare OpMode members. */
     // operational constants
     double joyScale = 0.5;
-    double motorMax = 0.6; // Limit motor power to this value for Andymark RUN_USING_ENCODER mode
+    double motorMax = 0.6; // Limit motor power to this value for RUN_USING_ENCODER mode
 
     public void manual_drive ();
 }
