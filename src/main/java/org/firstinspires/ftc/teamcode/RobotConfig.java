@@ -127,7 +127,7 @@ public class RobotConfig implements MecanumDrive
             return motor;
         } catch (Exception ex) {
             app.telemetry.addData("status", "Missing motor: "+name);
-            app.telemetry.addData("Exception", ex.getMessage());
+            app.telemetry.addData("Error", ex.getMessage());
         }
         return null;
     }
@@ -146,6 +146,8 @@ public class RobotConfig implements MecanumDrive
     /**
      * Drive the motors by setting specified power levels.
      *
+     * Power levels should be between 0 and maxMotor.
+     *
      * @param lf    Power level for leftFrontMotor.
      * @param rf    Power level for rightFrontMotor.
      * @param lr    Power level for leftRearMotor.
@@ -153,53 +155,50 @@ public class RobotConfig implements MecanumDrive
      */
     public void drive(double lf, double rf, double lr, double rr) {
         // Send values to the motors
-        leftFrontMotor.setPower(lf);
-        rightFrontMotor.setPower(rf);
-        leftRearMotor.setPower(lr);
-        rightRearMotor.setPower(rr);
-        app.telemetry.addData("LF", "%.3f", lf);
-        app.telemetry.addData("RF", "%.3f", rf);
-        app.telemetry.addData("LR", "%.3f", lr);
-        app.telemetry.addData("RR", "%.3f", rr);
+        try {
+            app.telemetry.addData("LF", "%.3f", lf);
+            leftFrontMotor.setPower(lf);
+            app.telemetry.addData("RF", "%.3f", rf);
+            rightFrontMotor.setPower(rf);
+            app.telemetry.addData("LR", "%.3f", lr);
+            leftRearMotor.setPower(lr);
+            app.telemetry.addData("RR", "%.3f", rr);
+            rightRearMotor.setPower(rr);
+        } catch (Exception ex) {
+            app.telemetry.addData("Error", ex.getMessage());
+            app.telemetry.update();
+        }
     }
+
+    /**
+     * Drive the robot in the direction specified by robotAngle.
+     *
+     * @param robotAngle    Angle of the robot movement, in radians;
+     * @param speed         Speed of the robot movement, between [0, maxMotor].
+     */
+    public void drive (double robotAngle, double speed) {
+        double xforce = speed*Math.cos(robotAngle);
+        double yforce = speed*Math.sin(robotAngle);
+        final double LF = yforce + xforce;
+        final double RF = yforce - xforce;
+        final double LR = yforce + xforce;
+        final double RR = yforce - xforce;
+        // Send values to the motors
+        drive(LF, RF, LR, RR);
+        // Send some useful parameters to the driver station
+        app.telemetry.addData("gamepad", "x: (%.2f), y: (%.2f) angle: (%.2f)", xforce, yforce, robotAngle*180/Math.PI);
+    }
+
+    /**
+     * Manual drive using gamepad 1:
+     */
     public void manual_drive () {
-/*        if (rightRearMotor == null) {
+        if (rightRearMotor == null) {
             app.telemetry.addData("Error", "The robot is missing motor.");
             return;
         }
-        // declare motor speed variables
-        double RF; double LF; double RR; double LR;
-        // declare joystick position variables
-        double X1; double Y1; double X2; double Y2;
 
-        // run until the end of the match (driver presses STOP)
-        // Reset speed variables
-        LF = 0; RF = 0; LR = 0; RR = 0;
-
-        // Get joystick values
-        Y1 = -app.gamepad1.right_stick_y * joyScale; // invert so up is positive
-        X1 = app.gamepad1.right_stick_x * joyScale;
-        Y2 = -app.gamepad1.left_stick_y * joyScale; // Y2 is not used at present
-        X2 = app.gamepad1.left_stick_x * joyScale;
-
-        // Forward/back movement
-        LF += Y1; RF += Y1; LR += Y1; RR += Y1;
-
-        // Side to side movement
-        LF += X1; RF -= X1; LR -= X1; RR += X1;
-
-        // Rotation movement
-        LF += X2; RF -= X2; LR += X2; RR -= X2;
-
-        // Clip motor power values to +-motorMax
-        LF = Math.max(-motorMax, Math.min(LF, motorMax));
-        RF = Math.max(-motorMax, Math.min(RF, motorMax));
-        LR = Math.max(-motorMax, Math.min(LR, motorMax));
-        RR = Math.max(-motorMax, Math.min(RR, motorMax));
-*/
-
-//     Changed joystick operation: use left joystick to control robot translation, use right joystick to control robot turn.
-
+        //     Changed joystick operation: use left joystick to control robot translation, use right joystick to control robot turn.
         double leftX = app.gamepad1.left_stick_x;
         double leftY = -app.gamepad1.left_stick_y;
         double r = Math.hypot(leftX, leftY)*motorMax;
@@ -234,5 +233,17 @@ public class RobotConfig implements MecanumDrive
      */
     public void stop () {
         drive(0,0,0,0);
+    }
+
+    /**
+     * Turning the robot left.
+     *
+     * @param power     Power level (0..maxMotor).
+     */
+    public void turn_left (double power) {
+        drive(-power, power, -power, power);
+    }
+    public void turn_right (double power) {
+        turn_left(-power);
     }
 }
