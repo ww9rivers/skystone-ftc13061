@@ -89,7 +89,7 @@ public class SensorREVColorDistance extends LinearOpMode {
     public void runOpMode() {
 
         RobotConfig robot = RobotConfig.init(this);
-        ColorSensor sensorColor = robot.sensorColor;
+        ColorSensor sensorColor = robot.colorSensor;
         DistanceSensor sensorDistance = robot.sensorDistance;
 
         // hsvValues is an array that will hold the hue, saturation, and value information.
