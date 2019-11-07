@@ -21,5 +21,6 @@ public class TestMecanumSW extends LinearOpMode {
             robot.drive(Math.PI*5/4, robot.motorMax);
             robot.showtime();
         }
+        robot.stop();
     }
 }

@@ -20,8 +20,9 @@ public class TestMecanumForward extends LinearOpMode {
         telemetry.update();
         while (opModeIsActive()) {
             // Send values to the motors
-            robot.drive(Math.PI/2, robot.motorMax);
+            robot.drive(Math.PI/2, robot.motorMax/2);
             robot.showtime();
         }
+        robot.stop();
     }
 }

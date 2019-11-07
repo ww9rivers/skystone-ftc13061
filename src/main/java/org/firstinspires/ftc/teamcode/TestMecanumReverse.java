@@ -21,5 +21,6 @@ public class TestMecanumReverse extends LinearOpMode {
             robot.drive(Math.PI*3/2, robot.motorMax);
             robot.showtime();
         }
+        robot.stop();
     }
 }

@@ -18,8 +18,9 @@ public class TestMecanumNE extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             // Send values to the motors
-            robot.drive(Math.PI/4, robot.motorMax);
+            robot.drive(Math.PI/4, robot.motorMax/2);
             robot.showtime();
         }
+        robot.stop();
     }
 }

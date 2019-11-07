@@ -22,5 +22,6 @@ public class TestMecanumDrive extends LinearOpMode {
             robot.manual_drive();
             robot.showtime();
         }
+        robot.stop();
     }
 }

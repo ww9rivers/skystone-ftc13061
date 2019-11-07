@@ -21,5 +21,6 @@ public class TestMecanumRight extends LinearOpMode {
             robot.drive(0, robot.motorMax);
             robot.showtime();
         }
+        robot.stop();
     }
 }
