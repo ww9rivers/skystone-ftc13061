@@ -105,6 +105,7 @@ public class AutonMode1 extends OpMode {
     public void loop() {
         switch (robot_state) {
             case MOVE_FOUNDATION:
+                moving_foundation_state = MovingFoundation.GOTO_FOUNDATION;
                 move_foundation();
                 break;
             case TRANSPORT_STONE:
@@ -122,8 +123,29 @@ public class AutonMode1 extends OpMode {
     /**
      * Robot is in this state right after start. In Position 1, blue or red.
      */
+    enum MovingFoundation {
+        GOTO_FOUNDATION,
+        DETECT_FOUNDATION,
+        LOWER_PULLER,
+        PULL_FOUNDATION
+    }
+    MovingFoundation moving_foundation_state = MovingFoundation.GOTO_FOUNDATION;
     private void move_foundation () {
         telemetry.addData("Status", "Moving foundation");
+        switch (moving_foundation_state) {
+            case GOTO_FOUNDATION:
+                robot.drive_reverse();
+                moving_foundation_state = MovingFoundation.DETECT_FOUNDATION;
+                return;
+            case DETECT_FOUNDATION:
+                // Detect the foundation when the touch sensor is triggered:
+                if (robot.detect_touch()) {
+                    moving_foundation_state = MovingFoundation.LOWER_PULLER;
+                    robot.lower_puler();
+                }
+                return;
+            case LOWER_PULLER:
+        }
     }
 
     /**
