@@ -80,6 +80,8 @@ public class RobotConfig implements MecanumDrive
     public static final double MID_SERVO       =  0.5 ;
     public static final double ARM_UP_POWER    =  0.45 ;
     public static final double ARM_DOWN_POWER  = -0.45 ;
+    public static final String STATUS = "Status";
+    public static final String TOUCH_SENSOR = "touch_sensor";
 
     /* local OpMode members. */
     HardwareMap hwMap       = null;
@@ -89,7 +91,7 @@ public class RobotConfig implements MecanumDrive
     private static RobotConfig theRobot = null;
     private RobotConfig(OpMode opmode) {
         app = opmode;
-        opmode.telemetry.addData("status", "Initialized");
+        opmode.telemetry.addData(STATUS, "Initialized");
         hwMap = opmode.hardwareMap;
 
         // Define and Initialize Motors
@@ -100,14 +102,20 @@ public class RobotConfig implements MecanumDrive
         rightRearMotor = get_motor("right_rear_motor", DcMotor.Direction.FORWARD);
         //leftArm.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        touchSensor = hwMap.get(DigitalChannel.class, "touch_sensor");
-        if (touchSensor != null) {
+        try {
+            touchSensor = hwMap.get(DigitalChannel.class, TOUCH_SENSOR);
             touchSensor.setMode(DigitalChannel.Mode.INPUT);
+        } catch (Exception ex) {
+            opmode.telemetry.addData("ERROR", "Missing " + TOUCH_SENSOR);
         }
 
         // Define and initialize ALL installed servos.
-        pullerServo = hwMap.get(Servo.class, "puller_servo");
-        pullerServo.setPosition(MID_SERVO);
+        try {
+            pullerServo = hwMap.get(Servo.class, "puller_servo");
+            pullerServo.setPosition(PULLER_UP);
+        } catch (Exception ex) {
+            opmode.telemetry.addData("ERROR", "Missing puller_servo");
+        }
         //rightClaw = hwMap.get(Servo.class, "right_hand");
         //rightClaw.setPosition(MID_SERVO);
 
@@ -119,6 +127,18 @@ public class RobotConfig implements MecanumDrive
             opmode.telemetry.addData("ERROR", ex.getMessage());
         }
         opmode.telemetry.update();
+    }
+
+    /**
+     * Get the current motor encoder positions.
+     *
+     * @param mp    An array of 4 integers to host the positions.
+     */
+    public void get_current_position (int mp[]) {
+        mp[0] = leftFrontMotor.getCurrentPosition();
+        mp[1] = rightFrontMotor.getCurrentPosition();
+        mp[2] = leftRearMotor.getCurrentPosition();
+        mp[3] = rightFrontMotor.getCurrentPosition();
     }
 
     private DcMotor get_motor (String name, DcMotor.Direction direction) {
@@ -135,7 +155,7 @@ public class RobotConfig implements MecanumDrive
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             return motor;
         } catch (Exception ex) {
-            app.telemetry.addData("status", "Missing motor: "+name);
+            app.telemetry.addData(STATUS, "Missing motor: "+name);
             app.telemetry.addData("ERROR", ex.getMessage());
         }
         return null;
@@ -210,7 +230,41 @@ public class RobotConfig implements MecanumDrive
     public void drive_forward() {
         drive(Math.PI/2, this.motorMax);
     }
+    public void drive_to (int morotPosition[]) {
+        // Turn On RUN_TO_POSITION
+        leftFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
+        // Set targets on all motors
+        leftFrontMotor.setTargetPosition(morotPosition[0]);
+        rightFrontMotor.setTargetPosition(morotPosition[1]);
+        leftRearMotor.setTargetPosition(morotPosition[2]);
+        rightRearMotor.setTargetPosition(morotPosition[3]);
+    }
+
+    /**
+     * Reset RUN_USING_ENCODER on all motors.
+     */
+    public void drive_using_encoder () {
+        leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    /**
+     * Check if any of the four motors is busy.
+     *
+     * @return  True if one or more of the four motors are busy.
+     */
+    public boolean is_motor_busy () {
+        return leftFrontMotor.isBusy()
+                || rightFrontMotor.isBusy()
+                || leftRearMotor.isBusy()
+                || rightRearMotor.isBusy();
+    }
     /**
      * Manual drive using gamepad 1:
      */
@@ -240,9 +294,13 @@ public class RobotConfig implements MecanumDrive
     /**
      * Set the pull server position to lower the puller to the foundation.
      */
-    public void lower_puler() {
-        pullerServo.setPosition(0.5);
+    public void puller_down() {
+        pullerServo.setPosition(PULLER_DOWN);
     }
+    public void puller_up() {
+        pullerServo.setPosition(PULLER_UP);
+    }
+
     /**
      * Show run time.
      */
