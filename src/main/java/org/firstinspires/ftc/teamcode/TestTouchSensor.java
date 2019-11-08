@@ -73,7 +73,7 @@ public class TestTouchSensor extends LinearOpMode {
 
             // send the info back to driver station using telemetry function.
             // if the digital channel returns true it's HIGH and the button is unpressed.
-            if (robot.touchSensor.getState() == true) {
+            if (robot.detect_touch() == true) {
                 telemetry.addData("Digital Touch", "Is Not Pressed");
             } else {
                 telemetry.addData("Digital Touch", "Is Pressed");
