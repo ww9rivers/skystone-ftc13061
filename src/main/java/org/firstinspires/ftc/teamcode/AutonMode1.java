@@ -45,10 +45,10 @@ public class AutonMode1 extends OpMode {
      * @param isRed     True, if aliance color is RED.
      */
     public AutonMode1(Boolean isRed) {
-        aliance = isRed ? Aliance.Color.RED : Aliance.ColA:wqor.BLUE;
+        aliance = isRed ? Aliance.Color.RED : Aliance.Color.BLUE;
     }
 
-:wq::    /*
+    /*
      * Code to run ONCE when the driver hits INIT
      */
     @Override
@@ -57,14 +57,18 @@ public class AutonMode1 extends OpMode {
 
         // Tell the driver that initialization is complete.
         telemetry.addData(robot.STATUS, "Initialized");
+        telemetry.update();
     }
 
     /*
-     * Code to run REPEATEDLY after the driver hits INIT, but before they hit PLAY
+     * Code to run REPEATEDLY after the driver hits INIT, but before they hit PLAY, to
+     * set the initial state of the robot state machine.
      */
     @Override
     public void init_loop() {
         robot_state = State.MOVE_FOUNDATION;
+        telemetry.addData(robot.STATUS, "Auton Mode 1: " + (aliance == Aliance.Color.RED ? "Red" : "Blue"));
+        telemetry.update();
     }
 
     /*
@@ -165,7 +169,12 @@ public class AutonMode1 extends OpMode {
         robot.stop();
     }
 
+    /**
+     * Process to transport stones to the foundation.
+     */
     private void transport_stone () {
         telemetry.addData(robot.STATUS, "Transporting Stone");
+        telemetry.update();
+
     }
 }
