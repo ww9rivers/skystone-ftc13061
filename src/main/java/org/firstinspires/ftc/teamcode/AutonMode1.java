@@ -27,7 +27,7 @@ import org.firstinspires.ftc.teamcode.Aliance;
 public class AutonMode1 extends OpMode {
     // Declare OpMode members.
     private Aliance.Color aliance = Aliance.Color.RED;
-    RobotConfig robot = RobotConfig.init(this);
+    RobotConfig robot = null;
     private DcMotor leftDrive = null;
     private DcMotor rightDrive = null;
 
@@ -45,49 +45,18 @@ public class AutonMode1 extends OpMode {
      * @param isRed     True, if aliance color is RED.
      */
     public AutonMode1(Boolean isRed) {
-        aliance = isRed ? Aliance.Color.RED : Aliance.Color.BLUE;
+        aliance = isRed ? Aliance.Color.RED : Aliance.ColA:wqor.BLUE;
     }
 
-    /**
-     * The old code of loop().
-     */
-    private void drive () {
-        // Setup a variable for each drive wheel to save power level for telemetry
-        double leftPower;
-        double rightPower;
-
-        // Choose to drive using either Tank Mode, or POV Mode
-        // Comment out the method that's not used.  The default below is POV.
-
-        // POV Mode uses left stick to go forward, and right stick to turn.
-        // - This uses basic math to combine motions and is easier to drive straight.
-        double drive = -gamepad1.left_stick_y;
-        double turn = gamepad1.right_stick_x;
-        leftPower = Range.clip(drive + turn, -1.0, 1.0);
-        rightPower = Range.clip(drive - turn, -1.0, 1.0);
-
-        // Tank Mode uses one stick to control each wheel.
-        // - This requires no math, but it is hard to drive forward slowly and keep straight.
-        // leftPower  = -gamepad1.left_stick_y ;
-        // rightPower = -gamepad1.right_stick_y ;
-
-        // Send calculated power to wheels
-        leftDrive.setPower(leftPower);
-        rightDrive.setPower(rightPower);
-
-        // Show the elapsed game time and wheel power.
-        telemetry.addData("Status", "Run Time: " + robot.runtime.toString());
-        telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
-    }
-    /*
+:wq::    /*
      * Code to run ONCE when the driver hits INIT
      */
     @Override
     public void init() {
-        robot.init(this);
+        robot = RobotConfig.init(this);
 
         // Tell the driver that initialization is complete.
-        telemetry.addData("Status", "Initialized");
+        telemetry.addData(robot.STATUS, "Initialized");
     }
 
     /*
@@ -105,7 +74,6 @@ public class AutonMode1 extends OpMode {
     public void loop() {
         switch (robot_state) {
             case MOVE_FOUNDATION:
-                moving_foundation_state = MovingFoundation.GOTO_FOUNDATION;
                 move_foundation();
                 break;
             case TRANSPORT_STONE:
@@ -130,21 +98,41 @@ public class AutonMode1 extends OpMode {
         PULL_FOUNDATION
     }
     MovingFoundation moving_foundation_state = MovingFoundation.GOTO_FOUNDATION;
+    double timer, travel;
     private void move_foundation () {
-        telemetry.addData("Status", "Moving foundation");
+        telemetry.addData(robot.STATUS, "Moving foundation");
         switch (moving_foundation_state) {
             case GOTO_FOUNDATION:
+                travel = robot.runtime.milliseconds();
                 robot.drive_reverse();
                 moving_foundation_state = MovingFoundation.DETECT_FOUNDATION;
                 return;
             case DETECT_FOUNDATION:
                 // Detect the foundation when the touch sensor is triggered:
                 if (robot.detect_touch()) {
+                    timer = robot.runtime.milliseconds();
+                    travel = timer - travel;
+                    timer += 300; // waiting time for the puller to lower
+                    robot.puller_down();
                     moving_foundation_state = MovingFoundation.LOWER_PULLER;
-                    robot.lower_puler();
                 }
                 return;
             case LOWER_PULLER:
+                if (robot.runtime.milliseconds() < timer) {
+                    return;
+                }
+                robot.drive_forward();
+                moving_foundation_state = MovingFoundation.PULL_FOUNDATION;
+                travel += robot.runtime.milliseconds() + 5;
+                return;
+            case PULL_FOUNDATION:
+                if (robot.runtime.milliseconds() < travel) {
+                    return;
+                }
+                robot.puller_up();
+                robot_state = State.TRANSPORT_STONE;
+                moving_foundation_state = MovingFoundation.GOTO_FOUNDATION;
+                return;
         }
     }
 
@@ -157,7 +145,8 @@ public class AutonMode1 extends OpMode {
      * 4.  Stop robot if color is detected.
      */
     private void park () {
-        telemetry.addData("Status", "Parking robot");
+        telemetry.addData(robot.STATUS, "Parking robot");
+        // How to orient self?
     }
 
     /*
@@ -177,6 +166,6 @@ public class AutonMode1 extends OpMode {
     }
 
     private void transport_stone () {
-        telemetry.addData("Status", "Transporting Stone");
+        telemetry.addData(robot.STATUS, "Transporting Stone");
     }
 }
