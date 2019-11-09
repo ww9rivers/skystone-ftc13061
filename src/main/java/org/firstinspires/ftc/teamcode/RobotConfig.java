@@ -30,7 +30,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -75,11 +74,15 @@ public class RobotConfig implements MecanumDrive
     public DigitalChannel   touchSensor     = null;
     public ElapsedTime      runtime         = new ElapsedTime();
 
-    private static final double PULLER_DOWN =  1.0;     // Maximum rotational position
-    private static final double PULLER_UP   =  0.5;     // Maximum rotational position
-    public static final double MID_SERVO       =  0.5 ;
-    public static final double ARM_UP_POWER    =  0.45 ;
-    public static final double ARM_DOWN_POWER  = -0.45 ;
+    // https://www.reddit.com/r/FTC/comments/7s6y32/rev_hd_hex_motor_encoder_cpr/
+    private static final int ENCODER_CPR        = 1120;     // REV Hex HD Motor (REV-41-1301) CPR is 1120
+    private static final double ENCODER_CPT     = 1440;     // number of encoder clicks in a full turn
+    private static final double ENCODER_CPI     = 53.476;   // encoder clicks per inch
+    private static final double PULLER_DOWN     = 1.0;      // Maximum rotational position
+    private static final double PULLER_UP       = 0.5;      // Maximum rotational position
+    public static final double MID_SERVO        = 0.5 ;
+    public static final double ARM_UP_POWER     = 0.45 ;
+    public static final double ARM_DOWN_POWER   = -0.45 ;
     public static final String STATUS = "Status";
     public static final String TOUCH_SENSOR = "touch_sensor";
 
@@ -130,15 +133,29 @@ public class RobotConfig implements MecanumDrive
     }
 
     /**
+     * Return true if motor is done turning. When that is true, reset motor mode.
+     */
+    public boolean done_turning () {
+        if (is_motor_busy()) {
+            return false;
+        }
+        drive_using_encoder();
+        return true;
+    }
+
+    /**
      * Get the current motor encoder positions.
      *
      * @param mp    An array of 4 integers to host the positions.
      */
-    public void get_current_position (int mp[]) {
-        mp[0] = leftFrontMotor.getCurrentPosition();
-        mp[1] = rightFrontMotor.getCurrentPosition();
-        mp[2] = leftRearMotor.getCurrentPosition();
-        mp[3] = rightFrontMotor.getCurrentPosition();
+    // Motor encoder position
+    int[] mposition = {0, 0, 0, 0};
+    public int[] get_current_position () {
+        mposition[0] = leftFrontMotor.getCurrentPosition();
+        mposition[1] = rightFrontMotor.getCurrentPosition();
+        mposition[2] = leftRearMotor.getCurrentPosition();
+        mposition[3] = rightFrontMotor.getCurrentPosition();
+        return mposition;
     }
 
     private DcMotor get_motor (String name, DcMotor.Direction direction) {
@@ -230,6 +247,27 @@ public class RobotConfig implements MecanumDrive
     public void drive_forward() {
         drive(Math.PI/2, this.motorMax);
     }
+
+    /**
+     * Set the motors up to drive over a distance.
+     *
+     * @param distance  Distance to drive over, in inches.
+     */
+    public void drive_over (double distance) {
+        int delta = (int) (distance / ENCODER_CPI);
+        int[] mp = get_current_position();
+        mp[0] -= delta; // LF
+        mp[1] += delta; // RF
+        mp[2] -= delta; // LR
+        mp[3] += delta; // RR
+        drive_to(mp);
+    }
+
+    /**
+     * Drive to given motor encoder positions.
+     *
+     * @param morotPosition     Motor encoder positions.
+     */
     public void drive_to (int morotPosition[]) {
         // Turn On RUN_TO_POSITION
         leftFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -328,6 +366,20 @@ public class RobotConfig implements MecanumDrive
         rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
+    /**
+     * Turn the robot a given angle: Positive to turn counter-clock wise.
+     *
+     * @param angle     Angle to turn, in fractions of Math.PI, e.g. 1/4.
+     */
+    public void turn (double angle) {
+        int[] mp = get_current_position();
+        int delta = (int) (angle * ENCODER_CPT);   // Fraction of a full turn
+        mp[0] += delta;
+        mp[1] += delta;
+        mp[2] += delta;
+        mp[3] += delta;
+        drive_to(mp);
+    }
     /**
      * Turning the robot left.
      *

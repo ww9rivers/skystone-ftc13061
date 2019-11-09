@@ -30,7 +30,6 @@ public class TestMotors extends LinearOpMode {
         robot.start();
 
         // run until the end of the match (driver presses STOP)
-        motorPos = new int[4];
         ElapsedTime t0 = new ElapsedTime();
         boolean power_set = false;
         int mx = 0;                     // Motor #
@@ -44,14 +43,13 @@ public class TestMotors extends LinearOpMode {
                     state = State.WAIT_ENCODER_DRIVE;
                     continue;
                 case WAIT_ENCODER_DRIVE:
-                    if (robot.is_motor_busy()) {
+                    if (!robot.done_turning()) {
                         continue; // continue to wait.
                     }
-                    robot.drive_using_encoder();
                     state = State.TEST_INDIVIDUAL_MOTORS;
                 // Fall through to test individual motors.
             }
-            robot.get_current_position(motorPos);
+            motorPos = robot.get_current_position();
             show_encoder();
             t0.reset();
             robot.drive(

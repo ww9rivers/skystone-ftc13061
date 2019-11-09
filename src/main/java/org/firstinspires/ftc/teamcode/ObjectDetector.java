@@ -11,7 +11,7 @@ import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 import java.util.List;
 
-import static org.firstinspires.ftc.teamcode.Vuforia.*;
+import static org.firstinspires.ftc.teamcode.Robovu.*;
 
 public class ObjectDetector {
     private static final String TFOD_MODEL_ASSET = "Skystone.tflite";

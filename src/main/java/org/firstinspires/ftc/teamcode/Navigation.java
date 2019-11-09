@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
@@ -10,7 +9,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
-import org.firstinspires.ftc.teamcode.Vuforia;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,9 +55,9 @@ public class Navigation {
 
     public Navigation (OpMode opmode) {
         op = opmode;
-        Vuforia vuforia = new Vuforia(opmode.hardwareMap);
-        //  Instantiate the Vuforia engine
-        nav = vuforia.getNavigator();
+        Robovu robovu = new Robovu(opmode.hardwareMap);
+        //  Instantiate the Robovu engine
+        nav = robovu.getNavigator();
 
         // Load the data sets for the trackable objects. These particular data
         // sets are stored in the 'assets' part of our application.
@@ -186,14 +184,14 @@ public class Navigation {
         // The two examples below assume that the camera is facing forward out the front of the robot.
 
         // We need to rotate the camera around it's long axis to bring the correct camera forward.
-        if (Vuforia.CAMERA_CHOICE == BACK) {
+        if (Robovu.CAMERA_CHOICE == BACK) {
             phoneYRotate = -90;
         } else {
             phoneYRotate = 90;
         }
 
         // Rotate the phone vertical about the X axis if it's in portrait mode
-        if (Vuforia.PHONE_IS_PORTRAIT) {
+        if (Robovu.PHONE_IS_PORTRAIT) {
             phoneXRotate = 90;
         }
 
@@ -209,7 +207,7 @@ public class Navigation {
 
         /**  Let all the trackable listeners know where the phone is.  */
         for (VuforiaTrackable trackable : allTrackables) {
-            ((VuforiaTrackableDefaultListener) trackable.getListener()).setPhoneInformation(robotFromCamera, Vuforia.CAMERA_CHOICE);
+            ((VuforiaTrackableDefaultListener) trackable.getListener()).setPhoneInformation(robotFromCamera, Robovu.CAMERA_CHOICE);
         }
 
         // WARNING:
