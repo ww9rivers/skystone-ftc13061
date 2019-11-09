@@ -1,13 +1,14 @@
 <?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
 <Robot type="FirstInspires-FTC">
-    <Webcam name="Webcam 1" serialNumber="VendorProduct:vendor=0x1908|product=0x2310|connection=" />
-    <LynxUsbDevice name="Expansion Hub Portal 1" serialNumber="DQ16G1Q5" parentModuleAddress="3">
-        <LynxModule name="Expansion Hub 1" port="3">
+    <LynxUsbDevice name="Expansion Hub Portal 1" serialNumber="DQ3DKIBZ" parentModuleAddress="2">
+        <LynxModule name="Expansion Hub 2" port="2">
             <RevRobotics40HDHexMotor name="left_front_motor" port="0" />
             <RevRobotics40HDHexMotor name="right_front_motor" port="1" />
             <RevRobotics40HDHexMotor name="left_rear_motor" port="2" />
             <RevRobotics40HDHexMotor name="right_rear_motor" port="3" />
+            <DigitalDevice name="touch_sensor" port="1" />
             <LynxEmbeddedIMU name="imu" port="0" bus="0" />
+            <RevColorSensorV3 name="color_sensor" port="0" bus="3" />
         </LynxModule>
     </LynxUsbDevice>
 </Robot>
