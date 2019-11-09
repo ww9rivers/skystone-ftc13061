@@ -1,9 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.teamcode.Aliance;
+
+import java.util.List;
 
 /** AutonMode1: #1 Position - This is a library, not an OpMode
  *
@@ -28,8 +31,7 @@ public class AutonMode1 extends OpMode {
     // Declare OpMode members.
     private Aliance.Color aliance = Aliance.Color.RED;
     RobotConfig robot = null;
-    private DcMotor leftDrive = null;
-    private DcMotor rightDrive = null;
+    ObjectDetector detector = null;
 
     enum State {
         MOVE_FOUNDATION,
@@ -54,6 +56,7 @@ public class AutonMode1 extends OpMode {
     @Override
     public void init() {
         robot = RobotConfig.init(this);
+        detector = new ObjectDetector(this);
 
         // Tell the driver that initialization is complete.
         telemetry.addData(robot.STATUS, "Initialized");
@@ -78,13 +81,13 @@ public class AutonMode1 extends OpMode {
     public void loop() {
         switch (robot_state) {
             case MOVE_FOUNDATION:
-                move_foundation();
+                moving_foundation_state = move_foundation();
                 break;
             case TRANSPORT_STONE:
-                transport_stone();
+                transport_state = transport_stone();
                 break;
             case PARKING:
-                park();
+                parking_state = park();
                 return;
             case STOP:
                 stop();
@@ -103,14 +106,13 @@ public class AutonMode1 extends OpMode {
     }
     MovingFoundation moving_foundation_state = MovingFoundation.GOTO_FOUNDATION;
     double timer, travel;
-    private void move_foundation () {
+    private MovingFoundation move_foundation () {
         telemetry.addData(robot.STATUS, "Moving foundation");
         switch (moving_foundation_state) {
             case GOTO_FOUNDATION:
                 travel = robot.runtime.milliseconds();
                 robot.drive_reverse();
-                moving_foundation_state = MovingFoundation.DETECT_FOUNDATION;
-                return;
+                return MovingFoundation.DETECT_FOUNDATION;
             case DETECT_FOUNDATION:
                 // Detect the foundation when the touch sensor is triggered:
                 if (robot.detect_touch()) {
@@ -118,26 +120,25 @@ public class AutonMode1 extends OpMode {
                     travel = timer - travel;
                     timer += 300; // waiting time for the puller to lower
                     robot.puller_down();
-                    moving_foundation_state = MovingFoundation.LOWER_PULLER;
+                    return MovingFoundation.LOWER_PULLER;
                 }
-                return;
+                break;
             case LOWER_PULLER:
                 if (robot.runtime.milliseconds() < timer) {
-                    return;
+                    break;
                 }
                 robot.drive_forward();
-                moving_foundation_state = MovingFoundation.PULL_FOUNDATION;
                 travel += robot.runtime.milliseconds() + 5;
-                return;
+                return MovingFoundation.PULL_FOUNDATION;
             case PULL_FOUNDATION:
                 if (robot.runtime.milliseconds() < travel) {
-                    return;
+                    break;
                 }
                 robot.puller_up();
                 robot_state = State.TRANSPORT_STONE;
-                moving_foundation_state = MovingFoundation.GOTO_FOUNDATION;
-                return;
+                return MovingFoundation.GOTO_FOUNDATION;
         }
+        return moving_foundation_state;
     }
 
     /**
@@ -148,9 +149,20 @@ public class AutonMode1 extends OpMode {
      * 3.  While driving, try to detect the color using sensor mounted under the robot.
      * 4.  Stop robot if color is detected.
      */
-    private void park () {
+    enum ParkingState {
+        GOTO_PARK,
+        PARKED
+    };
+    ParkingState parking_state = ParkingState.GOTO_PARK;
+    private ParkingState park () {
         telemetry.addData(robot.STATUS, "Parking robot");
         // How to orient self?
+        switch (parking_state) {
+            case GOTO_PARK:
+                // TBD: Where are we?
+                break;
+        }
+        return parking_state;
     }
 
     /*
@@ -172,9 +184,72 @@ public class AutonMode1 extends OpMode {
     /**
      * Process to transport stones to the foundation.
      */
-    private void transport_stone () {
+    enum TransportStoneState {
+        TURN_SOUTH,
+        TURN_SOURTH_WAIT,
+        TRAVEL_SOUTH,
+        TRAVELING_SOUTH,
+        TURN_TO_STONE,
+        PICKUP_STONE,
+        TURN_NORTH,
+        TURNING_NORTH,
+        DELIVER_STONE,
+        DELIVERING,
+        GO_PARKING
+    };
+    TransportStoneState transport_state = TransportStoneState.TURN_SOUTH;
+    List<Recognition> stones = null;
+    private TransportStoneState transport_stone () {
+        // Give the robot 5 seconds to park.
+        if (robot.runtime.seconds() > 25) {
+            robot_state = State.PARKING;
+            return TransportStoneState.TURN_SOUTH;
+        }
         telemetry.addData(robot.STATUS, "Transporting Stone");
         telemetry.update();
-
+        switch (transport_state) {
+            case TURN_SOUTH:
+                robot.turn(1/4);
+                return TransportStoneState.TURN_SOURTH_WAIT;
+            case TURN_SOURTH_WAIT:
+                if (robot.done_turning()) {
+                    return TransportStoneState.TRAVEL_SOUTH;
+                }
+                break;
+            case TRAVEL_SOUTH:
+                robot.drive_over(4*24+12);  // 4+1/2 tiles
+                return TransportStoneState.TRAVELING_SOUTH;
+            case TRAVELING_SOUTH:
+                stones = detector.detect();
+                if (stones != null) {
+                    // TBD:
+                    return TransportStoneState.TURN_TO_STONE;
+                }
+                break;
+            case TURN_TO_STONE:
+                // TBD: some condition must be met
+                return TransportStoneState.PICKUP_STONE;
+            case PICKUP_STONE:
+                // TBD: if a stone is picked up
+                return TransportStoneState.TURN_NORTH;
+            case TURN_NORTH:
+                robot.turn(1);
+            case TURNING_NORTH:
+                if (robot.done_turning()) {
+                    return TransportStoneState.DELIVER_STONE;
+                }
+                break;
+            case DELIVER_STONE:
+                // Driver under alliance bridge
+                robot.drive_over(3*24);
+                return TransportStoneState.DELIVERING;
+            case DELIVERING:
+                if (robot.done_turning()) {
+                    robot.turn(1);
+                    return TransportStoneState.TURNING_NORTH;
+                }
+                break;
+        }
+        return transport_state;
     }
 }
