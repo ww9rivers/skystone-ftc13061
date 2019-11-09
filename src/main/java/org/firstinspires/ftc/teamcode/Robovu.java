@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.vuforia.PIXEL_FORMAT;
+import com.vuforia.Vuforia;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -8,17 +10,17 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
-public class Vuforia {
+public class Robovu {
     /*
-     * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
+     * IMPORTANT: You need to obtain your own license key to use Robovu. The string below with which
      * 'parameters.vuforiaLicenseKey' is initialized is for illustration only, and will not function.
-     * A Vuforia 'Development' license key, can be obtained free of charge from the Vuforia developer
+     * A Robovu 'Development' license key, can be obtained free of charge from the Robovu developer
      * web site at https://developer.vuforia.com/license-manager.
      *
-     * Vuforia license keys are always 380 characters long, and look as if they contain mostly
+     * Robovu license keys are always 380 characters long, and look as if they contain mostly
      * random data. As an example, here is a example of a fragment of a valid key:
      *      ... yIgIzTqZ4mWjk9wd3cZO9T1axEqzuhxoGlfOOI2dRzKS4T0hQ8kT ...
-     * Once you've obtained a license key, copy the string from the Vuforia web site
+     * Once you've obtained a license key, copy the string from the Robovu web site
      * and paste it in to your code on the next line, between the double quotes.
      */
     // 2018-04-22 — robotics@annhua.org
@@ -37,7 +39,7 @@ public class Vuforia {
     private static final String WEBCAM = "Webcam 1";
 
     /**
-     * {@link #vuforia} is the variable we will use to store our instance of the Vuforia
+     * {@link #vuforia} is the variable we will use to store our instance of the Robovu
      * localization engine.
      */
     private static VuforiaLocalizer vuforia     = null;
@@ -47,33 +49,35 @@ public class Vuforia {
     /* local OpMode members. */
     private static HardwareMap hw                      = null;
 
-    public Vuforia(HardwareMap hwmap) { hw = hwmap; }
+    public Robovu(HardwareMap hwmap) { hw = hwmap; }
 
     /**
-     * Initialize the Vuforia localization engine for object detection.
+     * Initialize the Robovu localization engine for object detection.
      *
-     * @return  An instance of Vuforia localizer.
+     * @return  An instance of Robovu localizer.
      */
     public static VuforiaLocalizer getInstance () {
         if (vuforia != null) { return vuforia; }
         /*
-         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
+         * Configure Robovu by creating a Parameter object, and passing it to the Robovu engine.
          */
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
 
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
         parameters.cameraDirection = CAMERA_CHOICE;
 
-        //  Instantiate the Vuforia engine
+        //  Instantiate the Robovu engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
+        Vuforia.setFrameFormat(PIXEL_FORMAT.RGB565, true);
+
         return vuforia;
         // Loading trackables is not necessary for the TensorFlow Object Detection engine.
     }
 
     /**
-     * Get Vuforia localization engine for navigation.
+     * Get Robovu localization engine for navigation, using the phone camera.
      *
-     * @return  An instance of Vuforia localizer.
+     * @return  An instance of Robovu localizer.
      */
     public static VuforiaLocalizer getNavigator () {
         if (navigator != null) { return navigator; }
@@ -86,22 +90,22 @@ public class Vuforia {
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
         parameters.cameraDirection   = CAMERA_CHOICE;
 
-        //  Instantiate the Vuforia engine
+        //  Instantiate the Robovu engine
         navigator = ClassFactory.getInstance().createVuforia(parameters);
         return navigator;
     }
 
     /**
-     * Get a Vuforia localization engine for navigation using the webcam.
+     * Get a Robovu localization engine for navigation using the webcam.
      *
-     * @return  An instance of Vuforia localizer.
+     * @return  An instance of Robovu localizer.
      */
     public static VuforiaLocalizer getWebcam () {
         if (webcam != null) { return webcam; }
 
         /*
-         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
-         * We can pass Vuforia the handle to a camera preview resource (on the RC phone);
+         * Configure Robovu by creating a Parameter object, and passing it to the Robovu engine.
+         * We can pass Robovu the handle to a camera preview resource (on the RC phone);
          * If no camera monitor is desired, use the parameter-less constructor instead (commented out below).
          */
         int cameraMonitorViewId = hw.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hw.appContext.getPackageName());
@@ -116,7 +120,7 @@ public class Vuforia {
          */
         parameters.cameraName = hw.get(WebcamName.class, WEBCAM);
 
-        //  Instantiate the Vuforia engine
+        //  Instantiate the Robovu engine
         webcam = ClassFactory.getInstance().createVuforia(parameters);
         return webcam;
     }
