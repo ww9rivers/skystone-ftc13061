@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -60,6 +61,21 @@ public class Mecannum_Test extends LinearOpMode {
     private DcMotor leftRearMotor = null;
     private DcMotor rightRearMotor = null;
 
+    static final double INCREMENT   = 0.001;     // amount to slew servo each CYCLE_MS cycle
+    static final int    CYCLE_MS    =   50;     // period of each cycle
+    static final double MAX_POS     =  1.0;     // Maximum rotational position
+    static final double MIN_POS     =  0.0;     // Minimum rotational position
+
+    // Define class members
+    Servo claw, arm, elbow, puller;
+    double  position = (MAX_POS - MIN_POS) / 2; // Start at halfway position
+    boolean rampUp = true;
+    double clawPos = position;
+    double armPos = position;
+    double elbowPos = 1.0;
+    double pullerPos;
+
+
     @Override
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
@@ -72,6 +88,11 @@ public class Mecannum_Test extends LinearOpMode {
         rightFrontMotor = hardwareMap.get(DcMotor.class, "right_front_motor");
         leftRearMotor  = hardwareMap.get(DcMotor.class, "left_rear_motor");
         rightRearMotor = hardwareMap.get(DcMotor.class, "right_rear_motor");
+        arm = hardwareMap.get(Servo.class, "servo0");
+        elbow = hardwareMap.get(Servo.class, "servo1");
+        claw = hardwareMap.get(Servo.class, "servo2");
+        puller = hardwareMap.get(Servo.class, "servo5");
+
         float leftX, leftY;
 
         // Wait for the game to start (driver presses PLAY)
@@ -97,6 +118,43 @@ public class Mecannum_Test extends LinearOpMode {
             rightFrontMotor.setPower(v2);
             leftRearMotor.setPower(-v3);
             rightRearMotor.setPower(v4);
+
+
+            if(gamepad2.dpad_left) {  //01{
+                armPos -= INCREMENT;
+                if (armPos <= MIN_POS)
+                    armPos = MIN_POS;
+                arm.setPosition(armPos);
+            }
+
+            if(gamepad2.dpad_right) {
+                armPos += INCREMENT;
+                if (armPos >= MAX_POS)
+                    armPos = MAX_POS;
+                arm.setPosition(armPos);
+            }
+
+            if(gamepad2.dpad_down) {  //01{
+                elbowPos -= INCREMENT;
+                if (elbowPos <= MIN_POS)
+                    elbowPos = MIN_POS;
+                elbow.setPosition(elbowPos);
+            }
+
+            if(gamepad2.dpad_up) {
+                elbowPos += INCREMENT;
+                if (elbowPos >= MAX_POS)
+                    elbowPos = MAX_POS;
+                elbow.setPosition(elbowPos);
+            }
+
+            clawPos = 1.0 - gamepad2.left_stick_y;
+            claw.setPosition(clawPos);
+
+            pullerPos = 1.0 - gamepad2.right_stick_x;
+            puller.setPosition(pullerPos);
+
+
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
