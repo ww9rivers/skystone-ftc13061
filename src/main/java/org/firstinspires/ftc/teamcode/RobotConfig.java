@@ -83,8 +83,12 @@ public class RobotConfig implements MecanumDrive
     public static final double MID_SERVO        = 0.5 ;
     public static final double ARM_UP_POWER     = 0.45 ;
     public static final double ARM_DOWN_POWER   = -0.45 ;
-    public static final String STATUS = "Status";
-    public static final String TOUCH_SENSOR = "touch_sensor";
+    public static final String STATUS           = "Status";
+    public static final String TOUCH_SENSOR     = "touch_sensor";
+    private static final String SERVOS[]       = {
+            "server0", "server1", "server2", "server5"
+    };
+    public static Servo servo[] = { null, null, null, null };
 
     /* local OpMode members. */
     HardwareMap hwMap       = null;
@@ -114,10 +118,13 @@ public class RobotConfig implements MecanumDrive
 
         // Define and initialize ALL installed servos.
         try {
-            pullerServo = hwMap.get(Servo.class, "puller_servo");
+            for (int i = 0; i < SERVOS.length; i++) {
+                servo[i] = hwMap.get(Servo.class, SERVOS[i]);
+            }
+            pullerServo = servo[SERVOS.length-1];
             pullerServo.setPosition(PULLER_UP);
         } catch (Exception ex) {
-            opmode.telemetry.addData("ERROR", "Missing puller_servo");
+            opmode.telemetry.addData("ERROR", "Missing servo");
         }
         //rightClaw = hwMap.get(Servo.class, "right_hand");
         //rightClaw.setPosition(MID_SERVO);
@@ -364,6 +371,8 @@ public class RobotConfig implements MecanumDrive
         rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        app.telemetry.addData(STATUS, "Robot parked");
+        app.telemetry.update();
     }
 
     /**
