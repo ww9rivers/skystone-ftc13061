@@ -34,6 +34,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 /**
  * This 2019-2020 OpMode illustrates the basics of using the Vuforia localizer to determine
@@ -69,9 +71,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefau
 @TeleOp(name="SKYSTONE Vuforia Nav", group ="Test")
 public class TestSkyStoneNavigation extends LinearOpMode {
 
+    RobotConfig robot = null;
+    Navigation nav = null;
+
+
     @Override public void runOpMode() {
 
-        Navigation nav = new Navigation(this);
         // WARNING:
         // In this sample, we do not wait for PLAY to be pressed.  Target Tracking is started immediately when INIT is pressed.
         // This sequence is used to enable the new remote DS Camera Preview feature to be used with this sample.
@@ -83,9 +88,20 @@ public class TestSkyStoneNavigation extends LinearOpMode {
         // Note: To use the remote camera preview:
         // AFTER you hit Init on the Driver Station, use the "options menu" to select "Camera Stream"
         // Tap the preview window to receive a fresh image.
+        robot = RobotConfig.init(this);
+        nav = new Navigation(this);
         nav.activate();
+        nav.find_target();
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+
+        waitForStart();
+        robot.start();
+
         while (!isStopRequested()) {
             nav.find_target();
+            robot.manual_drive();
+            robot.showtime();
         }
 
         // Disable Tracking when we are done;

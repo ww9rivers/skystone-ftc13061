@@ -23,4 +23,5 @@ public interface MecanumDrive {
     double motorMax = 0.6; // Limit motor power to this value for Andymark RUN_USING_ENCODER mode
 
     public void manual_drive ();
+    public void auto_drive(double drivePower, double driveAngle, double turnPower);
 }

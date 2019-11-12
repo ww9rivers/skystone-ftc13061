@@ -30,7 +30,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -102,14 +101,14 @@ public class RobotConfig implements MecanumDrive
         //leftClaw.setPosition(MID_SERVO);
         //rightClaw.setPosition(MID_SERVO);
 
-        try {
+/*        try {
             // The color sensor and the distance sensor are in the same device.
             sensorColor = hwMap.get(ColorSensor.class, "color_sensor");
             sensorDistance = hwMap.get(DistanceSensor.class, "color_sensor");
         } catch (Exception ex) {
             opmode.telemetry.addData("Exception", ex.getMessage());
         }
-        opmode.telemetry.update();
+*/        opmode.telemetry.update();
     }
 
     private DcMotor get_motor (String name, DcMotor.Direction direction) {
@@ -141,6 +140,14 @@ public class RobotConfig implements MecanumDrive
             theRobot = new RobotConfig(opmode);
         }
         return theRobot;
+    }
+
+    public void reset() {
+        leftFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
     }
 
     /**
@@ -214,6 +221,25 @@ public class RobotConfig implements MecanumDrive
         // Send some useful parameters to the driver station
         app.telemetry.addData("gamepad", "x: (%.2f), y: (%.2f) angle: (%.2f)", leftX, leftY, robotAngle*180/Math.PI);
     }
+
+    public void auto_drive(double drivePower, double driveAngle, double turnPower){
+
+        double robotAngle = driveAngle*180.0/Math.PI  - Math.PI / 4;
+        double r = drivePower * motorMax;
+
+        final double LF = r * Math.cos(robotAngle) + turnPower;
+        final double RF = r * Math.sin(robotAngle) - turnPower;
+        final double LR = r * Math.sin(robotAngle) + turnPower;
+        final double RR = r * Math.cos(robotAngle) - turnPower;
+        // Send values to the motors
+        drive(LF, RF, LR, RR);
+        // Send some useful parameters to the driver station
+        app.telemetry.addData("driveStatus", "speed: (%.2f), angle: (%.2f) turn: (%.2f)", drivePower, driveAngle, turnPower);
+
+    }
+
+
+
     /**
      * Show run time.
      */
@@ -227,6 +253,7 @@ public class RobotConfig implements MecanumDrive
      */
     public void start () {
         runtime.reset();
+//        theRobot.reset();
     }
 
     /**

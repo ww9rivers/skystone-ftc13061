@@ -34,7 +34,7 @@ public class Vuforia {
     public static final boolean PHONE_IS_PORTRAIT = false  ;
 
     // Webcam name in text:
-    private static final String WEBCAM = "Webcam 1";
+    private static final String WEBCAM = "Webcam";
 
     /**
      * {@link #vuforia} is the variable we will use to store our instance of the Vuforia
