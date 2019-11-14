@@ -37,6 +37,7 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+
 /**
  * This is NOT an opmode. The purpose is to centralize all configuration in one spot.
  *
@@ -79,13 +80,15 @@ public class RobotConfig implements MecanumDrive
     /* local OpMode members. */
     HardwareMap hwMap       = null;
     OpMode app              = null;
+    DriveMode driveMode = DriveMode.MANUAL;
 
     /* Constructor - This is a singleton class. */
     private static RobotConfig theRobot = null;
-    private RobotConfig(OpMode opmode) {
+    private RobotConfig(OpMode opmode, DriveMode mode) {
         app = opmode;
         opmode.telemetry.addData("Status", "Initialized");
         hwMap = opmode.hardwareMap;
+        driveMode  = mode;
 
         // Define and Initialize Motors
         // These polarities are for the Neverest 20 motors
@@ -122,7 +125,10 @@ public class RobotConfig implements MecanumDrive
             // "RUN_USING_ENCODER" causes the motor to try to run at the specified fraction of full velocity
             // Note: We were not able to make this run mode work until we switched Channel A and B encoder wiring into
             // the motor controllers. (Neverest Channel A connects to MR Channel B input, and vice versa.)
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            if(driveMode == DriveMode.AUTO)
+                motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            else
+                motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             return motor;
         } catch (Exception ex) {
             app.telemetry.addData("status", "Missing motor: "+name);
@@ -135,9 +141,9 @@ public class RobotConfig implements MecanumDrive
      *
      * @param  opmode    OpMode initializing this robot.
      */
-    public static RobotConfig init(OpMode opmode) {
+    public static RobotConfig init(OpMode opmode, DriveMode mode) {
         if (theRobot == null) {
-            theRobot = new RobotConfig(opmode);
+            theRobot = new RobotConfig(opmode, mode);
         }
         return theRobot;
     }

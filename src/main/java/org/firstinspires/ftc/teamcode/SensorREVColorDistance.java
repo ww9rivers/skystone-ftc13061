@@ -88,7 +88,7 @@ public class SensorREVColorDistance extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        RobotConfig robot = RobotConfig.init(this);
+        RobotConfig robot = RobotConfig.init(this, MecanumDrive.DriveMode.MANUAL);
         ColorSensor sensorColor = robot.sensorColor;
         DistanceSensor sensorDistance = robot.sensorDistance;
 

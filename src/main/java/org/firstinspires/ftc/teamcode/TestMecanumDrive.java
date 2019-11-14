@@ -8,7 +8,7 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 public class TestMecanumDrive extends LinearOpMode {
     @Override
     public void runOpMode() {
-        RobotConfig robot = RobotConfig.init(this);
+        RobotConfig robot = RobotConfig.init(this, MecanumDrive.DriveMode.MANUAL);
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 

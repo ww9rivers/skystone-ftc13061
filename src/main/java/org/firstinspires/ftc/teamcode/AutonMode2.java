@@ -21,7 +21,7 @@ import com.qualcomm.robotcore.util.Range;
 public class AutonMode2 extends OpMode {
     // Declare OpMode members.
     private Aliance.Color aliance = Aliance.Color.RED;
-    RobotConfig robot = RobotConfig.init(this);
+    RobotConfig robot = RobotConfig.init(this, MecanumDrive.DriveMode.AUTO);
     private DcMotor leftDrive = null;
     private DcMotor rightDrive = null;
 
@@ -78,7 +78,7 @@ public class AutonMode2 extends OpMode {
      */
     @Override
     public void init() {
-        robot.init(this);
+        robot.init(this, MecanumDrive.DriveMode.AUTO);
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");

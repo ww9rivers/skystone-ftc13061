@@ -88,7 +88,7 @@ public class TestSkyStoneNavigation extends LinearOpMode {
         // Note: To use the remote camera preview:
         // AFTER you hit Init on the Driver Station, use the "options menu" to select "Camera Stream"
         // Tap the preview window to receive a fresh image.
-        robot = RobotConfig.init(this);
+        robot = RobotConfig.init(this, MecanumDrive.DriveMode.MANUAL);
         nav = new Navigation(this);
         nav.activate();
         nav.find_target();
