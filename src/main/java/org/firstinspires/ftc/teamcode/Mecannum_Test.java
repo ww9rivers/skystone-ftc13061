@@ -70,6 +70,7 @@ public class Mecannum_Test extends LinearOpMode {
     static final double TRAVEL_POS1_NoLoad = 0.15;
     static final double TRAVEL_POS_2 = 0.65;
 
+
     // Define class members
     Servo claw, arm, elbow, puller1, puller2;
     double  position = (MAX_POS - MIN_POS) / 2; // Start at halfway position

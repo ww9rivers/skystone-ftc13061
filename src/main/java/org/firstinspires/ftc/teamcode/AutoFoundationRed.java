@@ -33,7 +33,9 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 
 /**
  * This file illustrates the concept of driving a path based on encoder counts.
@@ -61,10 +63,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
-@Autonomous(name="Test: Auto Drive By Encoder", group="Test")
+@Autonomous(name="Automode: Move Foundation (red)", group="Test")
 //@Disabled
 
-public class AutoDriveByEncoder_Linear extends LinearOpMode {
+public class AutoFoundationRed extends LinearOpMode {
 
     /* Declare OpMode members. */
     private ElapsedTime     runtime = new ElapsedTime();
@@ -72,6 +74,9 @@ public class AutoDriveByEncoder_Linear extends LinearOpMode {
     private DcMotor rightFrontMotor = null;
     private DcMotor leftRearMotor = null;
     private DcMotor rightRearMotor = null;
+    Servo puller1, puller2;
+    TouchSensor digitalTouch;  // Hardware Device Object
+
 
     static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // eg: TETRIX Motor Encoder
     static final double     DRIVE_GEAR_REDUCTION    = 1.175 ;     // This is < 1.0 if geared UP
@@ -86,6 +91,7 @@ public class AutoDriveByEncoder_Linear extends LinearOpMode {
 
     private double perimeter  = 1.414*Math.PI * Math.sqrt(length*length+width*width);
 
+    double pullerPos = 0.0;
 
 
     @Override
@@ -114,6 +120,14 @@ public class AutoDriveByEncoder_Linear extends LinearOpMode {
         leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        puller1 = hardwareMap.get(Servo.class, "servo3");
+        puller2 = hardwareMap.get(Servo.class, "servo4");
+        puller1.setPosition(0.0);
+        puller2.setPosition(0.0);
+        // get a reference to our digitalTouch object.
+        digitalTouch = hardwareMap.touchSensor.get("sensor_digital");
+        // set the digital channel to input.
+
         // Send telemetry message to indicate successful Encoder reset
         telemetry.addData("Path0",  "Starting at %7d :%7d :%7d :%7d",
                 leftFrontMotor.getCurrentPosition(),
@@ -128,8 +142,20 @@ public class AutoDriveByEncoder_Linear extends LinearOpMode {
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
 
-      //  encoderTurn(DRIVE_SPEED, -90);
-        encoderDrive(DRIVE_SPEED,  90, 60,  105.0);  // S1: Forward 47 Inches with 5 Sec timeout
+        encoderDrive(DRIVE_SPEED,  180, 24,  3);  // S1: Forward 47 Inches with 5 Sec timeout
+        reset();
+ //       encoderDriveWithTouchSensor(DRIVE_SPEED,  -90, 16,  15);  // S1: Forward 47 Inches with 5 Sec timeout
+        encoderDrive(DRIVE_SPEED,  -90, 35,  15);  // S1: Forward 47 Inches with 5 Sec timeout
+        reset();
+        puller1.setPosition(0.5);
+        puller2.setPosition(0.5);
+        sleep(1000);   // optional pause after each move
+        encoderDrive(DRIVE_SPEED,  90, 30,  15);  // S1: Forward 47 Inches with 5 Sec timeout
+        reset();
+        puller1.setPosition(0);
+        puller2.setPosition(0);
+        sleep(1000);   // optional pause after each move
+        encoderDrive(DRIVE_SPEED,  0, 50,  10);  // S1: Forward 47 Inches with 5 Sec timeout
 //        encoderDrive(TURN_SPEED,   90,12, -12, 4.0);  // S2: Turn Right 12 Inches with 4 Sec timeout
 //        encoderDrive(DRIVE_SPEED, 90,-25, -25, 4.0);  // S3: Reverse 24 Inches with 4 Sec timeout
 
@@ -219,9 +245,105 @@ public class AutoDriveByEncoder_Linear extends LinearOpMode {
             leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+            sleep(250);   // optional pause after each move
+        }
+    }
+
+    public void encoderDriveWithTouchSensor(double speed,
+                             double angle,
+                             double distanceInInches,
+                             double timeoutS) {
+
+        int newLeftFrontTarget;
+        int newRightFrontTarget;
+        int newLeftRearTarget;
+        int newRightRearTarget;
+
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+
+            // Determine new target position, and pass to motor controller
+            // Turn On RUN_TO_POSITION
+            double robotAngle =  Math.toRadians(angle) - Math.PI / 4;
+
+            newLeftFrontTarget = leftFrontMotor.getCurrentPosition() - (int)((distanceInInches * COUNTS_PER_INCH) * Math.cos(robotAngle));
+            newRightFrontTarget = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
+            newLeftRearTarget = leftFrontMotor.getCurrentPosition() - (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
+            newRightRearTarget = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.cos(robotAngle));
+
+            leftFrontMotor.setTargetPosition(newLeftFrontTarget);
+            rightFrontMotor.setTargetPosition(newRightFrontTarget);
+            leftRearMotor.setTargetPosition(newLeftRearTarget);
+            rightRearMotor.setTargetPosition(newRightRearTarget);
+
+            leftFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            leftRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            leftFrontMotor.setPower(Math.abs(speed));
+            rightFrontMotor.setPower(Math.abs(speed));
+            leftRearMotor.setPower(Math.abs(speed));
+            rightRearMotor.setPower(Math.abs(speed));
+
+            // keep looping while we are still active, and there is time left, and both motors are running.
+            // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
+            // its target position, the motion will stop.  This is "safer" in the event that the robot will
+            // always end the motion as soon as possible.
+            // However, if you require that BOTH motors have finished their moves before the robot continues
+            // onto the next step, use (isBusy() || isBusy()) in the loop test.
+            while (opModeIsActive() &&
+                    (runtime.seconds() < timeoutS) &&
+                    (leftFrontMotor.isBusy() && rightFrontMotor.isBusy())) {
+
+                // Display it for the driver.
+                telemetry.addData("Path1",  "Running to %7d: %7f", (int)distanceInInches,  angle);
+                telemetry.addData("Path2",  "Running at %7d :%7d",
+                        leftFrontMotor.getCurrentPosition(),
+                        rightFrontMotor.getCurrentPosition());
+                telemetry.update();
+                if (digitalTouch.isPressed()) {
+                    // Stop all motion;
+                    leftFrontMotor.setPower(0);
+                    rightFrontMotor.setPower(0);
+                    leftRearMotor.setPower(0);
+                    rightRearMotor.setPower(0);
+
+                    // Turn off RUN_TO_POSITION
+                    leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    pullerPos = 0.5;
+                    puller1.setPosition(pullerPos);
+                    puller2.setPosition(pullerPos);
+                    return;
+
+                }
+
+            }
+
+            // Stop all motion;
+            leftFrontMotor.setPower(0);
+            rightFrontMotor.setPower(0);
+            leftRearMotor.setPower(0);
+            rightRearMotor.setPower(0);
+
+            // Turn off RUN_TO_POSITION
+            leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
             //  sleep(250);   // optional pause after each move
         }
     }
+
+
+
     public void encoderTurn(double speed,
                              double angle) {
         int newLeftFrontTarget;
@@ -292,4 +414,16 @@ public class AutoDriveByEncoder_Linear extends LinearOpMode {
         }
     }
 
+    private void reset(){
+        leftRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+    }
 }

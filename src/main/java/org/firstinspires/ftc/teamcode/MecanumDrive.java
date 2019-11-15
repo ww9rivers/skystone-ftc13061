@@ -21,12 +21,17 @@ public interface MecanumDrive {
     // operational constants
     double joyScale = 0.5;
     double motorMax = 0.6; // Limit motor power to this value for Andymark RUN_USING_ENCODER mode
-    enum DriveMode
-    {
+
+    enum DriveMode {
         AUTO, MANUAL;
     }
 
 
-    public void manual_drive ();
-    public void auto_drive(double drivePower, double driveAngle, double turnPower);
+    public void manual_drive();
+    public void encoderDrive(double speed,
+                             double angle,
+                             double distanceInInches,
+                             double timeoutS);
+    public void encoderTurn(double speed,
+                            double angle);
 }

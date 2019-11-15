@@ -28,8 +28,8 @@ public class AutonMode1 extends OpMode {
     // Declare OpMode members.
     private Aliance.Color aliance = Aliance.Color.RED;
     RobotConfig robot = RobotConfig.init(this, MecanumDrive.DriveMode.AUTO);
-    private DcMotor leftDrive = null;
-    private DcMotor rightDrive = null;
+    static final double     DRIVE_SPEED             = 0.6;
+    static final double     TURN_SPEED              = 0.5;
 
     enum State {
         MOVE_FOUNDATION,
@@ -48,37 +48,6 @@ public class AutonMode1 extends OpMode {
         aliance = isRed ? Aliance.Color.RED : Aliance.Color.BLUE;
     }
 
-    /**
-     * The old code of loop().
-     */
-    private void drive () {
-        // Setup a variable for each drive wheel to save power level for telemetry
-        double leftPower;
-        double rightPower;
-
-        // Choose to drive using either Tank Mode, or POV Mode
-        // Comment out the method that's not used.  The default below is POV.
-
-        // POV Mode uses left stick to go forward, and right stick to turn.
-        // - This uses basic math to combine motions and is easier to drive straight.
-        double drive = -gamepad1.left_stick_y;
-        double turn = gamepad1.right_stick_x;
-        leftPower = Range.clip(drive + turn, -1.0, 1.0);
-        rightPower = Range.clip(drive - turn, -1.0, 1.0);
-
-        // Tank Mode uses one stick to control each wheel.
-        // - This requires no math, but it is hard to drive forward slowly and keep straight.
-        // leftPower  = -gamepad1.left_stick_y ;
-        // rightPower = -gamepad1.right_stick_y ;
-
-        // Send calculated power to wheels
-        leftDrive.setPower(leftPower);
-        rightDrive.setPower(rightPower);
-
-        // Show the elapsed game time and wheel power.
-        telemetry.addData("Status", "Run Time: " + robot.runtime.toString());
-        telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
-    }
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -123,6 +92,9 @@ public class AutonMode1 extends OpMode {
      * Robot is in this state right after start. In Position 1, blue or red.
      */
     private void move_foundation () {
+
+        robot.encoderDrive(DRIVE_SPEED, 180, 12, 3);
+        robot.encoderDrive(DRIVE_SPEED, 270, 18, 3);
         telemetry.addData("Status", "Moving foundation");
     }
 

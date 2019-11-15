@@ -17,7 +17,7 @@ public class TestMecanumDrive extends LinearOpMode {
         robot.start();
 
         // run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
+        while (this.opModeIsActive()) {
             // Send values to the motors
             robot.manual_drive();
             robot.showtime();
