@@ -256,7 +256,22 @@ public class RobotConfig implements MecanumDrive
     }
 
     /**
+     * Set the motors up to drive across a distance.
+     */
+    public void drive_across (double distance) {
+        int delta = (int) (distance / ENCODER_CPI);
+        int[] mp = get_current_position();
+        mp[0] += delta;
+        mp[1] += delta;
+        mp[2] -= delta;
+        mp[3] -= delta;
+        drive_to(mp);
+    }
+    /**
      * Set the motors up to drive over a distance.
+     *
+     * TBD: This only works for forward and reverse directions. Need to create a generic version
+     * that would drive over a distance in any direction.
      *
      * @param distance  Distance to drive over, in inches.
      */
@@ -277,10 +292,7 @@ public class RobotConfig implements MecanumDrive
      */
     public void drive_to (int morotPosition[]) {
         // Turn On RUN_TO_POSITION
-        leftFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        set_drive_mode(DcMotor.RunMode.RUN_TO_POSITION);
 
         // Set targets on all motors
         leftFrontMotor.setTargetPosition(morotPosition[0]);
@@ -293,10 +305,7 @@ public class RobotConfig implements MecanumDrive
      * Reset RUN_USING_ENCODER on all motors.
      */
     public void drive_using_encoder () {
-        leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        set_drive_mode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     /**
@@ -346,6 +355,12 @@ public class RobotConfig implements MecanumDrive
         pullerServo.setPosition(PULLER_UP);
     }
 
+    public void set_drive_mode (DcMotor.RunMode xmode) {
+        leftFrontMotor.setMode(xmode);
+        rightFrontMotor.setMode(xmode);
+        leftRearMotor.setMode(xmode);
+        rightRearMotor.setMode(xmode);
+    }
     /**
      * Show run time.
      */
@@ -367,10 +382,7 @@ public class RobotConfig implements MecanumDrive
     public void stop () {
         theRobot = null;
         drive(0,0,0,0);
-        leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        set_drive_mode(DcMotor.RunMode.RUN_USING_ENCODER);
         app.telemetry.addData(STATUS, "Robot parked");
         app.telemetry.update();
     }

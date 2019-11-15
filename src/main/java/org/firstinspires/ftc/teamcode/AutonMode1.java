@@ -56,8 +56,11 @@ public class AutonMode1 extends OpMode {
     @Override
     public void init() {
         robot = RobotConfig.init(this);
-        detector = new ObjectDetector(this);
-
+        try {
+            detector = new ObjectDetector(this);
+        } catch (Throwable ex) {
+            ex.printStackTrace();
+        }
         // Tell the driver that initialization is complete.
         telemetry.addData(robot.STATUS, "Initialized");
         telemetry.update();

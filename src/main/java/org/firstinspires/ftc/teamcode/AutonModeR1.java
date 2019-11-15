@@ -30,9 +30,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.AutonMode1;
 
@@ -56,7 +53,7 @@ import org.firstinspires.ftc.teamcode.AutonMode1;
  * Reference: org.firstinspires.ftc.robotcontroller.external.samples.PushbotAutoDrive*
  */
 
-@Autonomous(name="AutonModeR1: Red 1", group="Iterative Opmode")
+@Autonomous(name="Auton: Red foundation 0", group="Auton")
 public class AutonModeR1 extends AutonMode1
 {
     public AutonModeR1 () {

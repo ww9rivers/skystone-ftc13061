@@ -53,7 +53,12 @@ public class TestObjectDetection extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        detector = new ObjectDetector(this);
+        try {
+            detector = new ObjectDetector(this);
+        } catch (Throwable ex) {
+            ex.printStackTrace();
+            return;
+        }
 
         /** Wait for the game to begin */
         telemetry.addData(">", "Press Play to start op mode");
@@ -65,6 +70,10 @@ public class TestObjectDetection extends LinearOpMode {
                 List<Recognition> updatedRecognitions = detector.detect();
             }
         }
-
+        try {
+            detector.finalize();
+        } catch (Throwable ex) {
+            ex.printStackTrace();
+        }
     }
 }

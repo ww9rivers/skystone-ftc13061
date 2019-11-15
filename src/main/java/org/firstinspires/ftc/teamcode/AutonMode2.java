@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.teamcode.AutonMode;
 
 /** AutonMode2: #2 Position - This is a library, not an OpMode
  *
@@ -18,70 +20,25 @@ import com.qualcomm.robotcore.util.Range;
  * Reference: https://drive.google.com/open?id=1HdyA5MHN3-CSbFCGKsrEqOEmcXNH-F_7
  * Reference: org.firstinspires.ftc.robotcontroller.external.samples.PushbotAutoDrive*
  */
-public class AutonMode2 extends OpMode {
-    // Declare OpMode members.
-    private Aliance.Color aliance = Aliance.Color.RED;
-    RobotConfig robot = RobotConfig.init(this);
-    private DcMotor leftDrive = null;
-    private DcMotor rightDrive = null;
+public class AutonMode2 extends AutonMode {
 
     enum State {
-        MOVE_FOUNDATION,
+        DETECT_STONE,
         TRANSPORT_STONE,
         PARKING,
-        STOP
+        STOP,
+        IDLE
     };
     private State  robot_state;
+    private ElapsedTime timer;      // timer for being in a state
 
     /**
      * Constructor.
      *
      * @param isRed     True, if aliance color is RED.
      */
-    public AutonMode2(Boolean isRed) {
-        aliance = isRed ? Aliance.Color.RED : Aliance.Color.BLUE;
-    }
-
-    /**
-     * The old code of loop().
-     */
-    private void drive () {
-        // Setup a variable for each drive wheel to save power level for telemetry
-        double leftPower;
-        double rightPower;
-
-        // Choose to drive using either Tank Mode, or POV Mode
-        // Comment out the method that's not used.  The default below is POV.
-
-        // POV Mode uses left stick to go forward, and right stick to turn.
-        // - This uses basic math to combine motions and is easier to drive straight.
-        double drive = -gamepad1.left_stick_y;
-        double turn = gamepad1.right_stick_x;
-        leftPower = Range.clip(drive + turn, -1.0, 1.0);
-        rightPower = Range.clip(drive - turn, -1.0, 1.0);
-
-        // Tank Mode uses one stick to control each wheel.
-        // - This requires no math, but it is hard to drive forward slowly and keep straight.
-        // leftPower  = -gamepad1.left_stick_y ;
-        // rightPower = -gamepad1.right_stick_y ;
-
-        // Send calculated power to wheels
-        leftDrive.setPower(leftPower);
-        rightDrive.setPower(rightPower);
-
-        // Show the elapsed game time and wheel power.
-        telemetry.addData("Status", "Run Time: " + robot.runtime.toString());
-        telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
-    }
-    /*
-     * Code to run ONCE when the driver hits INIT
-     */
-    @Override
-    public void init() {
-        robot.init(this);
-
-        // Tell the driver that initialization is complete.
-        telemetry.addData("Status", "Initialized");
+    public AutonMode2 (boolean isRed) {
+        super(isRed);
     }
 
     /*
@@ -89,7 +46,9 @@ public class AutonMode2 extends OpMode {
      */
     @Override
     public void init_loop() {
-        robot_state = State.MOVE_FOUNDATION;
+        robot_state = State.DETECT_STONE;
+        telemetry.addData(robot.STATUS, "Auton Mode 1: " + (aliance == Aliance.Color.RED ? "Red" : "Blue"));
+        telemetry.update();
     }
 
     /*
@@ -98,26 +57,43 @@ public class AutonMode2 extends OpMode {
     @Override
     public void loop() {
         switch (robot_state) {
-            case MOVE_FOUNDATION:
-                move_foundation();
+            case DETECT_STONE:
+                // TBD: Refactor - stone detection should be done in parallel to other actions.
+                detection_state = detect_stone();
                 break;
             case TRANSPORT_STONE:
-                transport_stone();
+                transport_state = transport_stone();
                 break;
             case PARKING:
-                park();
+                parking_state = park();
                 return;
             case STOP:
                 stop();
+                robot_state = State.IDLE;
                 return;
+            case IDLE:
+                idle();
+                break;
         }
     }
 
     /**
      * Robot is in this state right after start. In Position 1, blue or red.
      */
-    private void move_foundation () {
-        telemetry.addData("Status", "Moving foundation");
+    enum DetectionState {
+        DETECTION_START,
+        DETECTION_FAILED
+    };
+    private DetectionState detection_state = DetectionState.DETECTION_START;
+    private DetectionState detect_stone () {
+        telemetry.addData(robot.STATUS, "Moving foundation");
+        switch (detection_state) {
+            case DETECTION_START:
+                if (detector == null) {
+                    return DetectionState.DETECTION_FAILED;
+                }
+        }
+        return detection_state;
     }
 
     /**
@@ -128,27 +104,45 @@ public class AutonMode2 extends OpMode {
      * 3.  While driving, try to detect the color using sensor mounted under the robot.
      * 4.  Stop robot if color is detected.
      */
-    private void park () {
-        telemetry.addData("Status", "Parking robot");
+    enum ParkingState {
+        GO_PARKING
+    }
+    private ParkingState parking_state = ParkingState.GO_PARKING;
+    private ParkingState park () {
+        telemetry.addData(robot.STATUS, "Parking robot");
+        switch (parking_state) {
+            case GO_PARKING:
+                break;
+        }
+        return parking_state;
     }
 
-    /*
-     * Code to run ONCE when the driver hits PLAY
-     */
-    @Override
-    public void start() {
-        robot.start();
-    }
-
-    /*
-     * Code to run ONCE after the driver hits STOP
-     */
-    @Override
-    public void stop() {
-        robot.stop();
-    }
-
-    private void transport_stone () {
-        telemetry.addData("Status", "Transporting Stone");
+    enum TransportState {
+        TRANSPORT_START,
+        TRANSPORT_FIND,
+        TRANSPORT_PICKUP,
+        TRANSPORT_DELIVER
+    };
+    TransportState transport_state = TransportState.TRANSPORT_START;
+    private TransportState transport_stone () {
+        switch (transport_state) {
+            case TRANSPORT_START:
+                telemetry.addData(robot.STATUS, "Transporting Stone");
+                timer.reset();
+                robot.drive_forward();
+                return TransportState.TRANSPORT_FIND;
+            case TRANSPORT_FIND:
+                stone = detect();
+                if (stone != null) {
+                    // Adjust robot position to get the object
+                    adjust_robot(stone);
+                } else if (timer.milliseconds() < 1200) {
+                    // The timer needs to be calibrated to make sure the robot reaches the stones.
+                    // Nothing detected, but we'll have to try pick up something.
+                    break;
+                }
+                return TransportState.TRANSPORT_PICKUP;
+        }
+        return transport_state;
     }
 }
