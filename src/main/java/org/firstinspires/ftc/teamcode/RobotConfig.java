@@ -61,11 +61,18 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  */
 public class RobotConfig implements MecanumDrive
 {
-    /* Public OpMode members. */
-    public DcMotor          leftFrontMotor  = null;
-    public DcMotor          leftRearMotor   = null;
-    public DcMotor          rightFrontMotor = null;
-    public DcMotor          rightRearMotor  = null;
+    /* local OpMode members. */
+    HardwareMap hwMap       = null;
+    OpMode app              = null;
+
+    // Hardware components
+    //  Device for direction:
+    protected REVIMU        imu = null;
+    //  Driving motors:
+    protected DcMotor       leftFrontMotor  = null;
+    protected DcMotor       leftRearMotor   = null;
+    protected DcMotor       rightFrontMotor = null;
+    protected DcMotor       rightRearMotor  = null;
 
     public Servo            pullerServo     = null;
     public Servo            clawServo       = null;
@@ -89,10 +96,6 @@ public class RobotConfig implements MecanumDrive
             "server0", "server1", "server2", "server5"
     };
     public static Servo servo[] = { null, null, null, null };
-
-    /* local OpMode members. */
-    HardwareMap hwMap       = null;
-    OpMode app              = null;
 
     /* Constructor - This is a singleton class. */
     private static RobotConfig theRobot = null;
@@ -273,10 +276,10 @@ public class RobotConfig implements MecanumDrive
      * TBD: This only works for forward and reverse directions. Need to create a generic version
      * that would drive over a distance in any direction.
      *
-     * @param distance  Distance to drive over, in inches.
+     * @param inches  Distance to drive over, in inches.
      */
-    public void drive_over (double distance) {
-        int delta = (int) (distance / ENCODER_CPI);
+    public void drive_over (double inches) {
+        int delta = (int) (inches / ENCODER_CPI);
         int[] mp = get_current_position();
         mp[0] -= delta; // LF
         mp[1] += delta; // RF
@@ -346,6 +349,12 @@ public class RobotConfig implements MecanumDrive
     }
 
     /**
+     * Pause the robot.
+     */
+    public void pause () {
+        drive(0, 0, 0, 0);
+    }
+    /**
      * Set the pull server position to lower the puller to the foundation.
      */
     public void puller_down() {
@@ -355,6 +364,11 @@ public class RobotConfig implements MecanumDrive
         pullerServo.setPosition(PULLER_UP);
     }
 
+    /**
+     * Set driver motors to the given drive mode.
+     *
+     * @param xmode A DcMotor.RunMode run mode constant.
+     */
     public void set_drive_mode (DcMotor.RunMode xmode) {
         leftFrontMotor.setMode(xmode);
         rightFrontMotor.setMode(xmode);
