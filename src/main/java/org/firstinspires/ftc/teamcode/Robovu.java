@@ -67,8 +67,8 @@ public class Robovu {
         parameters.cameraDirection = CAMERA_CHOICE;
 
         //  Instantiate the Robovu engine
-        vuforia = ClassFactory.getInstance().createVuforia(parameters);
         Vuforia.setFrameFormat(PIXEL_FORMAT.RGB565, true);
+        vuforia = ClassFactory.getInstance().createVuforia(parameters);
 
         return vuforia;
         // Loading trackables is not necessary for the TensorFlow Object Detection engine.
