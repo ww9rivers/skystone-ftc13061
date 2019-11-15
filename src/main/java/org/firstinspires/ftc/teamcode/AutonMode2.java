@@ -82,16 +82,31 @@ public class AutonMode2 extends AutonMode {
      */
     enum DetectionState {
         DETECTION_START,
+        DETECTION_WAIT,
         DETECTION_FAILED
     };
     private DetectionState detection_state = DetectionState.DETECTION_START;
     private DetectionState detect_stone () {
-        telemetry.addData(robot.STATUS, "Moving foundation");
         switch (detection_state) {
             case DETECTION_START:
+                telemetry.addData(robot.STATUS, "Detect stone");
+                timer.reset();
                 if (detector == null) {
+                    // Object detector failed: No detection, drive over and randomly pick up.
+                    robot.drive_forward();
                     return DetectionState.DETECTION_FAILED;
                 }
+                robot.drive_over(24.0);
+                return DetectionState.DETECTION_WAIT;
+            case DETECTION_FAILED:
+                if (timer.milliseconds() < 1200) { break; }
+                robot.pause();
+                // Fall through to DETECTION_WAIT to continue.
+            case DETECTION_WAIT:
+                if (robot.is_motor_busy()) { break; }
+                transport_state = TransportState.TRANSPORT_START;
+                robot_state = State.TRANSPORT_STONE;
+                return DetectionState.DETECTION_START;
         }
         return detection_state;
     }
