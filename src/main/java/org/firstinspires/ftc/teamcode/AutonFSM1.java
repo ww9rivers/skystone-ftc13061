@@ -1,10 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.util.Range;
-
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
-import org.firstinspires.ftc.teamcode.Aliance;
 
 import java.util.List;
 
@@ -27,7 +23,7 @@ import java.util.List;
  * Reference: https://drive.google.com/open?id=1HdyA5MHN3-CSbFCGKsrEqOEmcXNH-F_7
  * Reference: org.firstinspires.ftc.robotcontroller.external.samples.PushbotAutoDrive*
  */
-public class AutonMode1 extends AutonMode {
+public class AutonFSM1 extends AutonMode {
 
     enum State {
         MOVE_FOUNDATION,
@@ -42,7 +38,7 @@ public class AutonMode1 extends AutonMode {
      *
      * @param isRed     True, if aliance color is RED.
      */
-    public AutonMode1 (boolean isRed) {
+    public AutonFSM1(boolean isRed) {
         super(isRed);
     }
 
@@ -90,6 +86,42 @@ public class AutonMode1 extends AutonMode {
     MovingFoundation moving_foundation_state = MovingFoundation.GOTO_FOUNDATION;
     double timer, travel;
     private MovingFoundation move_foundation () {
+        telemetry.addData(robot.STATUS, "Moving foundation");
+        switch (moving_foundation_state) {
+            case GOTO_FOUNDATION:
+                travel = robot.runtime.milliseconds();
+                robot.drive_reverse();
+                return MovingFoundation.DETECT_FOUNDATION;
+            case DETECT_FOUNDATION:
+                // Detect the foundation when the touch sensor is triggered:
+                if (robot.detect_touch()) {
+                    timer = robot.runtime.milliseconds();
+                    travel = timer - travel;
+                    timer += 300; // waiting time for the puller to lower
+                    robot.puller_down();
+                    return MovingFoundation.LOWER_PULLER;
+                }
+                break;
+            case LOWER_PULLER:
+                if (robot.runtime.milliseconds() < timer) {
+                    break;
+                }
+                robot.drive_forward();
+                travel += robot.runtime.milliseconds() + 5;
+                return MovingFoundation.PULL_FOUNDATION;
+            case PULL_FOUNDATION:
+                if (robot.runtime.milliseconds() < travel) {
+                    break;
+                }
+                robot.puller_up();
+                robot_state = State.TRANSPORT_STONE;
+                return MovingFoundation.GOTO_FOUNDATION;
+        }
+        return moving_foundation_state;
+    }
+
+    private void linear_move_foundation () {
+
         robot.encoderDrive(RobotConfig.DRIVE_SPEED,  180, 24,  3);  // S1: Forward 47 Inches with 5 Sec timeout
         //       encoderDriveWithTouchSensor(DRIVE_SPEED,  -90, 16,  15);  // S1: Forward 47 Inches with 5 Sec timeout
         robot.encoderDriveWithTouchSensor(RobotConfig.DRIVE_SPEED,  -90, 35,  15);  // S1: Forward 47 Inches with 5 Sec timeout
@@ -102,7 +134,6 @@ public class AutonMode1 extends AutonMode {
         robot.sleep(1000);   // optional pause after each move
         robot.encoderDrive(RobotConfig.DRIVE_SPEED,  0, 50,   15);
         telemetry.addData("Status", "Moving foundation");
-        return moving_foundation_state; // Change this to enter next state
     }
 
     /**
