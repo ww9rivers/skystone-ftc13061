@@ -65,15 +65,20 @@ public class Mecannum_Test extends LinearOpMode {
     static final int    CYCLE_MS    =   50;     // period of each cycle
     static final double MAX_POS     =  1.0;     // Maximum rotational position
     static final double MIN_POS     =  0.0;     // Minimum rotational position
+    static final double CLAW_MAX_POS = 0.6;
+    static final double TRAVEL_POS1_Load = 0.3;
+    static final double TRAVEL_POS1_NoLoad = 0.15;
+    static final double TRAVEL_POS_2 = 0.65;
+
 
     // Define class members
-    Servo claw, arm, elbow, puller;
+    Servo claw, arm, elbow, puller1, puller2;
     double  position = (MAX_POS - MIN_POS) / 2; // Start at halfway position
     boolean rampUp = true;
-    double clawPos = position;
-    double armPos = position;
+    double clawPos = 0;
+    double armPos = 1.0;
     double elbowPos = 1.0;
-    double pullerPos;
+    double pullerPos = 0.0;
 
 
     @Override
@@ -91,7 +96,10 @@ public class Mecannum_Test extends LinearOpMode {
         arm = hardwareMap.get(Servo.class, "servo0");
         elbow = hardwareMap.get(Servo.class, "servo1");
         claw = hardwareMap.get(Servo.class, "servo2");
-        puller = hardwareMap.get(Servo.class, "servo5");
+        puller1 = hardwareMap.get(Servo.class, "servo3");
+        puller2 = hardwareMap.get(Servo.class, "servo4");
+        puller1.setPosition(0.0);
+        puller2.setPosition(0.0);
 
         float leftX, leftY;
 
@@ -120,14 +128,31 @@ public class Mecannum_Test extends LinearOpMode {
             rightRearMotor.setPower(v4);
 
 
-            if(gamepad2.dpad_left) {  //01{
+            if(gamepad2.a)
+            {
+                armPos = TRAVEL_POS1_Load;
+                elbowPos = TRAVEL_POS_2;
+                arm.setPosition(armPos);
+                elbow.setPosition(elbowPos);
+            }
+
+            if(gamepad2.y)
+            {
+                armPos = TRAVEL_POS1_NoLoad;
+                elbowPos = TRAVEL_POS_2;
+                arm.setPosition(armPos);
+                elbow.setPosition(elbowPos);
+            }
+
+
+            if(gamepad2.dpad_right) {  //01{
                 armPos -= INCREMENT;
                 if (armPos <= MIN_POS)
                     armPos = MIN_POS;
                 arm.setPosition(armPos);
             }
 
-            if(gamepad2.dpad_right) {
+            if(gamepad2.dpad_left) {
                 armPos += INCREMENT;
                 if (armPos >= MAX_POS)
                     armPos = MAX_POS;
@@ -148,17 +173,45 @@ public class Mecannum_Test extends LinearOpMode {
                 elbow.setPosition(elbowPos);
             }
 
-            clawPos = 1.0 - gamepad2.left_stick_y;
-            claw.setPosition(clawPos);
+            if(gamepad2.left_bumper) {  //01{
+                clawPos -= INCREMENT;
+                if (clawPos <= MIN_POS)
+                    clawPos = MIN_POS;
+                claw.setPosition(clawPos);
+            }
 
-            pullerPos = 1.0 - gamepad2.right_stick_x;
-            puller.setPosition(pullerPos);
+            if(gamepad2.right_bumper) {
+                clawPos += INCREMENT;
+                if (clawPos >= CLAW_MAX_POS)
+                    clawPos = CLAW_MAX_POS;
+                claw.setPosition(clawPos);
+            }
 
+            if(gamepad2.right_stick_x >0)
+            {
+                pullerPos += INCREMENT;
+                if(pullerPos > 0.65)
+                    pullerPos = 0.65;
+                puller1.setPosition(pullerPos);
+                puller2.setPosition(pullerPos);
+            }
+
+            if(gamepad2.right_stick_x < 0)
+            {
+                pullerPos -= INCREMENT;
+                if(pullerPos <= MIN_POS)
+                    pullerPos = MIN_POS;
+                puller1.setPosition(pullerPos);
+                puller2.setPosition(pullerPos);
+            }
 
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("gamepad", "x: (%.2f), y: (%.2f) angle: (%.2f)", leftX, leftY, robotAngle*180/Math.PI);
+            telemetry.addData("ArmPos:", "%5.2f", armPos);
+            telemetry.addData("ElbowPos:", "%5.2f", elbowPos);
+            telemetry.addData("ClawPos:", "%5.2f", clawPos);
             telemetry.update();
         }
     }

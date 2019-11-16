@@ -21,7 +21,6 @@ import org.firstinspires.ftc.teamcode.AutonMode;
  * Reference: org.firstinspires.ftc.robotcontroller.external.samples.PushbotAutoDrive*
  */
 public class AutonMode2 extends AutonMode {
-
     enum State {
         DETECT_STONE,
         TRANSPORT_STONE,

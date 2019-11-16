@@ -22,5 +22,16 @@ public interface MecanumDrive {
     double joyScale = 0.5;
     double motorMax = 1.0; // Limit motor power to this value for RUN_USING_ENCODER mode
 
-    public void manual_drive ();
+    enum DriveMode {
+        AUTO, MANUAL;
+    }
+
+
+    public void manual_drive();
+    public void encoderDrive(double speed,
+                             double angle,
+                             double distanceInInches,
+                             double timeoutS);
+    public void encoderTurn(double speed,
+                            double angle);
 }

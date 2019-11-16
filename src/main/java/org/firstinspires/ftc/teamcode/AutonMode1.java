@@ -27,11 +27,7 @@ import java.util.List;
  * Reference: https://drive.google.com/open?id=1HdyA5MHN3-CSbFCGKsrEqOEmcXNH-F_7
  * Reference: org.firstinspires.ftc.robotcontroller.external.samples.PushbotAutoDrive*
  */
-public class AutonMode1 extends OpMode {
-    // Declare OpMode members.
-    private Aliance.Color aliance = Aliance.Color.RED;
-    RobotConfig robot = null;
-    ObjectDetector detector = null;
+public class AutonMode1 extends AutonMode {
 
     enum State {
         MOVE_FOUNDATION,
@@ -46,24 +42,8 @@ public class AutonMode1 extends OpMode {
      *
      * @param isRed     True, if aliance color is RED.
      */
-    public AutonMode1(Boolean isRed) {
-        aliance = isRed ? Aliance.Color.RED : Aliance.Color.BLUE;
-    }
-
-    /*
-     * Code to run ONCE when the driver hits INIT
-     */
-    @Override
-    public void init() {
-        robot = RobotConfig.init(this);
-        try {
-            detector = new ObjectDetector(this);
-        } catch (Throwable ex) {
-            ex.printStackTrace();
-        }
-        // Tell the driver that initialization is complete.
-        telemetry.addData(robot.STATUS, "Initialized");
-        telemetry.update();
+    public AutonMode1 (boolean isRed) {
+        super(isRed);
     }
 
     /*
@@ -142,6 +122,22 @@ public class AutonMode1 extends OpMode {
                 return MovingFoundation.GOTO_FOUNDATION;
         }
         return moving_foundation_state;
+    }
+
+    private void linear_move_foundation () {
+
+        robot.encoderDrive(RobotConfig.DRIVE_SPEED,  180, 24,  3);  // S1: Forward 47 Inches with 5 Sec timeout
+        //       encoderDriveWithTouchSensor(DRIVE_SPEED,  -90, 16,  15);  // S1: Forward 47 Inches with 5 Sec timeout
+        robot.encoderDriveWithTouchSensor(RobotConfig.DRIVE_SPEED,  -90, 35,  15);  // S1: Forward 47 Inches with 5 Sec timeout
+        robot.puller1.setPosition(0.5);
+        robot.puller2.setPosition(0.5);
+        robot.sleep(1000);  // optional pause after each move
+        robot.encoderDrive(RobotConfig.DRIVE_SPEED,  90, 30,  15);  // S1: Forward 47 Inches with 5 Sec timeout
+        robot.puller1.setPosition(0.);
+        robot.puller2.setPosition(0.);
+        robot.sleep(1000);   // optional pause after each move
+        robot.encoderDrive(RobotConfig.DRIVE_SPEED,  0, 50,   15);
+        telemetry.addData("Status", "Moving foundation");
     }
 
     /**

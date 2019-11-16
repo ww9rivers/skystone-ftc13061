@@ -80,7 +80,7 @@ public abstract class AutonMode extends OpMode {
      */
     @Override
     public void init () {
-        robot = RobotConfig.init(this);
+        robot = RobotConfig.init(this, MecanumDrive.DriveMode.AUTO);
         try {
             timer = new ElapsedTime();
             detector = new ObjectDetector(this);

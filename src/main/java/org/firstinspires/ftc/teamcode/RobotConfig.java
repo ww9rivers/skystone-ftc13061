@@ -36,7 +36,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
 
 /**
  * This is NOT an opmode. The purpose is to centralize all configuration in one spot.
@@ -64,6 +66,12 @@ public class RobotConfig implements MecanumDrive
     /* local OpMode members. */
     HardwareMap hwMap       = null;
     OpMode app              = null;
+    DriveMode driveMode = DriveMode.MANUAL;
+
+    static final double length = 11.5;
+    static final double width = 14.5;
+    private double perimeter  = 1.414*Math.PI * Math.sqrt(length*length+width*width);
+
 
     // Hardware components
     //  Device for direction:
@@ -74,10 +82,12 @@ public class RobotConfig implements MecanumDrive
     protected DcMotor       rightFrontMotor = null;
     protected DcMotor       rightRearMotor  = null;
 
-    public Servo            pullerServo     = null;
-    public Servo            clawServo       = null;
+    public Servo            leftClaw        = null;
+    public Servo            rightClaw       = null;
+    public Servo            puller1         = null;
+    public Servo            puller2         = null;
     public ColorSensor      colorSensor     = null;
-    public DistanceSensor   sensorDistance  = null;
+    public DistanceSensor   distanceSensor  = null;
     public DigitalChannel   touchSensor     = null;
     public ElapsedTime      runtime         = new ElapsedTime();
 
@@ -90,19 +100,28 @@ public class RobotConfig implements MecanumDrive
     public static final double MID_SERVO        = 0.5 ;
     public static final double ARM_UP_POWER     = 0.45 ;
     public static final double ARM_DOWN_POWER   = -0.45 ;
+    static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // eg: TETRIX Motor Encoder
+    static final double     DRIVE_GEAR_REDUCTION    = 1.175 ;     // This is < 1.0 if geared UP
+    static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
+    static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+            (WHEEL_DIAMETER_INCHES * Math.PI);
+    public static final double     DRIVE_SPEED             = 0.6;
+    public static final double     TURN_SPEED              = 0.5;
+
     public static final String STATUS           = "Status";
     public static final String TOUCH_SENSOR     = "touch_sensor";
     private static final String SERVOS[]       = {
-            "server0", "server1", "server2", "server5"
+        "server0", "server1", "server2", "server5"
     };
     public static Servo servo[] = { null, null, null, null };
 
     /* Constructor - This is a singleton class. */
     private static RobotConfig theRobot = null;
-    private RobotConfig(OpMode opmode) {
+    private RobotConfig (OpMode opmode, DriveMode mode) {
         app = opmode;
         opmode.telemetry.addData(STATUS, "Initialized");
         hwMap = opmode.hardwareMap;
+        driveMode  = mode;
 
         // Define and Initialize Motors
         // These polarities are for the Neverest 20 motors
@@ -110,7 +129,15 @@ public class RobotConfig implements MecanumDrive
         rightFrontMotor = get_motor("right_front_motor", DcMotor.Direction.FORWARD);
         leftRearMotor = get_motor("left_rear_motor", DcMotor.Direction.FORWARD);
         rightRearMotor = get_motor("right_rear_motor", DcMotor.Direction.FORWARD);
-        //leftArm.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        puller1 = hwMap.get(Servo.class, "servo3");
+        puller2 = hwMap.get(Servo.class, "servo4");
+
+        if(leftFrontMotor == null){
+            app.telemetry.addData("LeftFrontMotor", "LeftFrontMotor is null");
+            app.telemetry.update();
+            return;
+        }
 
         try {
             touchSensor = hwMap.get(DigitalChannel.class, TOUCH_SENSOR);
@@ -124,18 +151,16 @@ public class RobotConfig implements MecanumDrive
             for (int i = 0; i < SERVOS.length; i++) {
                 servo[i] = hwMap.get(Servo.class, SERVOS[i]);
             }
-            pullerServo = servo[SERVOS.length-1];
-            pullerServo.setPosition(PULLER_UP);
+            puller1 = servo[3];
+            puller2 = servo[4];
         } catch (Exception ex) {
             opmode.telemetry.addData("ERROR", "Missing servo");
         }
-        //rightClaw = hwMap.get(Servo.class, "right_hand");
-        //rightClaw.setPosition(MID_SERVO);
 
         try {
             // The color sensor and the distance sensor are in the same device.
             colorSensor = hwMap.get(ColorSensor.class, "color_sensor");
-            sensorDistance = hwMap.get(DistanceSensor.class, "color_sensor");
+            distanceSensor = hwMap.get(DistanceSensor.class, "color_sensor");
         } catch (Exception ex) {
             opmode.telemetry.addData("ERROR", ex.getMessage());
         }
@@ -179,7 +204,12 @@ public class RobotConfig implements MecanumDrive
             // "RUN_USING_ENCODER" causes the motor to try to run at the specified fraction of full velocity
             // Note: We were not able to make this run mode work until we switched Channel A and B encoder wiring into
             // the motor controllers. (Neverest Channel A connects to MR Channel B input, and vice versa.)
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            if(driveMode == DriveMode.AUTO) {
+                motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            }
+            else
+                motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             return motor;
         } catch (Exception ex) {
             app.telemetry.addData(STATUS, "Missing motor: "+name);
@@ -191,12 +221,31 @@ public class RobotConfig implements MecanumDrive
     /** Initialize standard Hardware interfaces
      *
      * @param  opmode    OpMode initializing this robot.
+     * @return  The Robot - a singleton.
      */
-    public static RobotConfig init(OpMode opmode) {
+    public static RobotConfig init(OpMode opmode, DriveMode mode) {
         if (theRobot == null) {
-            theRobot = new RobotConfig(opmode);
+            theRobot = new RobotConfig(opmode, mode);
         }
         return theRobot;
+    }
+
+    /**
+     * Intialize the robot for manual drive.
+     *
+     * @param opmode    The OpMode initializing this robot.
+     * @return  The Robot - a singleton.
+     */
+    public static RobotConfig init(OpMode opmode) {
+        return init(opmode, DriveMode.MANUAL);
+    }
+
+    public void reset() {
+        leftFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
     }
 
     /**
@@ -358,10 +407,12 @@ public class RobotConfig implements MecanumDrive
      * Set the pull server position to lower the puller to the foundation.
      */
     public void puller_down() {
-        pullerServo.setPosition(PULLER_DOWN);
+        puller1.setPosition(PULLER_DOWN);
+        puller2.setPosition(PULLER_DOWN);
     }
     public void puller_up() {
-        pullerServo.setPosition(PULLER_UP);
+        puller1.setPosition(PULLER_UP);
+        puller2.setPosition(PULLER_UP);
     }
 
     /**
@@ -375,6 +426,198 @@ public class RobotConfig implements MecanumDrive
         leftRearMotor.setMode(xmode);
         rightRearMotor.setMode(xmode);
     }
+
+    /*
+     *  Method to perfmorm a relative move, based on encoder counts.
+     *  Encoders are not reset as the move is based on the current position.
+     *  Move will stop if any of three conditions occur:
+     *  1) Move gets to the desired position
+     *  2) Move runs out of time
+     *  3) Driver stops the opmode running.
+     */
+    public void encoderDrive(double speed, double angle, double distanceInInches, double timeoutS) {
+
+        int newLeftFrontTarget;
+        int newRightFrontTarget;
+        int newLeftRearTarget;
+        int newRightRearTarget;
+
+        // Ensure that the opmode is still active
+        // Determine new target position, and pass to motor controller
+        // Turn On RUN_TO_POSITION
+        double robotAngle =  Math.toRadians(angle) - Math.PI / 4;
+
+        if(leftFrontMotor == null){
+            app.telemetry.addData("LeftFrontMotor", "LeftFrontMotor is null");
+            app.telemetry.update();
+            return;
+        }
+
+        newLeftFrontTarget = leftFrontMotor.getCurrentPosition() - (int)((distanceInInches * COUNTS_PER_INCH) * Math.cos(robotAngle));
+        newRightFrontTarget = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
+        newLeftRearTarget = leftFrontMotor.getCurrentPosition() - (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
+        newRightRearTarget = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.cos(robotAngle));
+
+        leftFrontMotor.setTargetPosition(newLeftFrontTarget);
+        rightFrontMotor.setTargetPosition(newRightFrontTarget);
+        leftRearMotor.setTargetPosition(newLeftRearTarget);
+        rightRearMotor.setTargetPosition(newRightRearTarget);
+
+        leftFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+        // reset the timeout time and start motion.
+        runtime.reset();
+        leftFrontMotor.setPower(Math.abs(speed));
+        rightFrontMotor.setPower(Math.abs(speed));
+        leftRearMotor.setPower(Math.abs(speed));
+        rightRearMotor.setPower(Math.abs(speed));
+
+        // keep looping while we are still active, and there is time left, and both motors are running.
+        // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
+        // its target position, the motion will stop.  This is "safer" in the event that the robot will
+        // always end the motion as soon as possible.
+        // However, if you require that BOTH motors have finished their moves before the robot continues
+        // onto the next step, use (isBusy() || isBusy()) in the loop test.
+        while ((runtime.seconds() < timeoutS) &&
+                (leftFrontMotor.isBusy() && rightFrontMotor.isBusy())) {
+
+            // Display it for the driver.
+            app.telemetry.addData("Path1",  "Running to %7d: %7f", (int)distanceInInches,  angle);
+            app.telemetry.addData("Path2",  "Running at %7d :%7d",
+                    leftFrontMotor.getCurrentPosition(),
+                    rightFrontMotor.getCurrentPosition());
+            app.telemetry.update();
+        }
+
+        // Turn off RUN_TO_POSITION
+        robotReset();
+            //  sleep(250);   // optional pause after each move
+    }
+
+    public void encoderDriveWithTouchSensor(double speed, double angle, double distanceInInches, double timeoutS) {
+
+        int newLeftFrontTarget;
+        int newRightFrontTarget;
+        int newLeftRearTarget;
+        int newRightRearTarget;
+
+        // Ensure that the opmode is still active
+            // Determine new target position, and pass to motor controller
+            // Turn On RUN_TO_POSITION
+        double robotAngle =  Math.toRadians(angle) - Math.PI / 4;
+
+        newLeftFrontTarget = leftFrontMotor.getCurrentPosition() - (int)((distanceInInches * COUNTS_PER_INCH) * Math.cos(robotAngle));
+        newRightFrontTarget = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
+        newLeftRearTarget = leftFrontMotor.getCurrentPosition() - (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
+        newRightRearTarget = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.cos(robotAngle));
+
+        leftFrontMotor.setTargetPosition(newLeftFrontTarget);
+        rightFrontMotor.setTargetPosition(newRightFrontTarget);
+        leftRearMotor.setTargetPosition(newLeftRearTarget);
+        rightRearMotor.setTargetPosition(newRightRearTarget);
+
+        leftFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+        // reset the timeout time and start motion.
+        runtime.reset();
+        leftFrontMotor.setPower(Math.abs(speed));
+        rightFrontMotor.setPower(Math.abs(speed));
+        leftRearMotor.setPower(Math.abs(speed));
+        rightRearMotor.setPower(Math.abs(speed));
+
+        // keep looping while we are still active, and there is time left, and both motors are running.
+        // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
+        // its target position, the motion will stop.  This is "safer" in the event that the robot will
+        // always end the motion as soon as possible.
+        // However, if you require that BOTH motors have finished their moves before the robot continues
+        // onto the next step, use (isBusy() || isBusy()) in the loop test.
+        while ((runtime.seconds() < timeoutS) &&
+                (leftFrontMotor.isBusy() && rightFrontMotor.isBusy())) {
+
+            // Display it for the driver.
+            app.telemetry.addData("Path1",  "Running to %7d: %7f", (int)distanceInInches,  angle);
+            app.telemetry.addData("Path2",  "Running at %7d :%7d",
+                    leftFrontMotor.getCurrentPosition(),
+                    rightFrontMotor.getCurrentPosition());
+            app.telemetry.update();
+            if (detect_touch()) {
+                // Stop all motion;
+                robotReset();
+                return;
+            }
+
+        }
+
+        robotReset();
+            //  sleep(250);   // optional pause after each move
+    }
+
+
+    public void encoderTurn(double speed, double angle) {
+        int newLeftFrontTarget;
+        int newRightFrontTarget;
+        int newLeftRearTarget;
+        int newRightRearTarget;
+
+        // Ensure that the opmode is still active
+
+        // Determine new target position, and pass to motor controller
+        // Turn On RUN_TO_POSITION
+
+        newLeftFrontTarget = leftFrontMotor.getCurrentPosition() - (int)(angle*perimeter/360 * COUNTS_PER_INCH);
+        newRightFrontTarget = rightFrontMotor.getCurrentPosition() + (int)(-angle*perimeter/360 * COUNTS_PER_INCH);
+        newLeftRearTarget = leftFrontMotor.getCurrentPosition() - (int)(angle*perimeter/360 * COUNTS_PER_INCH);
+        newRightRearTarget = rightFrontMotor.getCurrentPosition() + (int)(-angle*perimeter/360 * COUNTS_PER_INCH);
+
+
+        leftFrontMotor.setTargetPosition(newLeftFrontTarget);
+        rightFrontMotor.setTargetPosition(newRightFrontTarget);
+        leftRearMotor.setTargetPosition(newLeftRearTarget);
+        rightRearMotor.setTargetPosition(newRightRearTarget);
+
+        leftFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+        // reset the timeout time and start motion.
+        runtime.reset();
+        leftFrontMotor.setPower(Math.abs(speed));
+        rightFrontMotor.setPower(Math.abs(speed));
+        leftRearMotor.setPower(Math.abs(speed));
+        rightRearMotor.setPower(Math.abs(speed));
+
+        // keep looping while we are still active, and there is time left, and both motors are running.
+        // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
+        // its target position, the motion will stop.  This is "safer" in the event that the robot will
+        // always end the motion as soon as possible.
+        // However, if you require that BOTH motors have finished their moves before the robot continues
+        // onto the next step, use (isBusy() || isBusy()) in the loop test.
+        while ((leftFrontMotor.isBusy() && rightFrontMotor.isBusy())) {
+
+            // Display it for the driver.
+            app.telemetry.addData("Path1",  "Running to %7d :%7d", newLeftFrontTarget,  newRightFrontTarget);
+            app.telemetry.addData("Path2",  "Running at %7d :%7d",
+                    leftFrontMotor.getCurrentPosition(),
+                    rightFrontMotor.getCurrentPosition());
+            app.telemetry.update();
+        }
+
+        // Turn off RUN_TO_POSITION
+        robotReset();
+
+        //  sleep(250);   // optional pause after each move
+    }
+
     /**
      * Show run time.
      */
@@ -425,5 +668,31 @@ public class RobotConfig implements MecanumDrive
     }
     public void turn_right (double power) {
         turn_left(-power);
+    }
+
+    public final void sleep(long milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void robotReset () {
+        // Stop all motion;
+        leftFrontMotor.setPower(0);
+        rightFrontMotor.setPower(0);
+        leftRearMotor.setPower(0);
+        rightRearMotor.setPower(0);
+
+        leftRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 }

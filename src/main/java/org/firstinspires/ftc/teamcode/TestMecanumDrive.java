@@ -8,7 +8,7 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 public class TestMecanumDrive extends LinearOpMode {
     @Override
     public void runOpMode() {
-        RobotConfig robot = RobotConfig.init(this);
+        RobotConfig robot = RobotConfig.init(this, MecanumDrive.DriveMode.MANUAL);
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
@@ -17,7 +17,7 @@ public class TestMecanumDrive extends LinearOpMode {
         robot.start();
 
         // run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
+        while (this.opModeIsActive()) {
             // Send values to the motors
             robot.manual_drive();
             robot.showtime();

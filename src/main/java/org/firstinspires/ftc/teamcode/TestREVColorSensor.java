@@ -87,10 +87,9 @@ public class TestREVColorSensor extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-
-        RobotConfig robot = RobotConfig.init(this);
+        RobotConfig robot = RobotConfig.init(this, MecanumDrive.DriveMode.MANUAL);
         ColorSensor sensorColor = robot.colorSensor;
-        DistanceSensor sensorDistance = robot.sensorDistance;
+        DistanceSensor sensorDistance = robot.distanceSensor;
 
         // hsvValues is an array that will hold the hue, saturation, and value information.
         float hsvValues[] = {0F, 0F, 0F};
