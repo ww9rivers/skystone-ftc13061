@@ -30,7 +30,6 @@ public class AutonMode2 extends AutonMode {
         IDLE
     };
     private State  robot_state;
-    private ElapsedTime timer;      // timer for being in a state
 
     /**
      * Constructor.

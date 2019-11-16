@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 
@@ -12,6 +13,7 @@ public abstract class AutonMode extends OpMode {
     protected RobotConfig       robot = null;
     protected ObjectDetector    detector = null;
     protected Recognition       stone = null;
+    protected ElapsedTime       timer = null;      // timer for being in a state
 
     /**
      * Constructor.
@@ -80,6 +82,7 @@ public abstract class AutonMode extends OpMode {
     public void init () {
         robot = RobotConfig.init(this);
         try {
+            timer = new ElapsedTime();
             detector = new ObjectDetector(this);
         } catch (Throwable ex) {
             ex.printStackTrace();

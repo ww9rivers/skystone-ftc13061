@@ -68,6 +68,7 @@ public class REVIMU {
         robot.drive_using_encoder();
         // Wait for the game to start (Display Gyro value), and reset gyro before we move..
     }
+
     /**
      * Perform one cycle of closed loop heading control.
      *
@@ -92,7 +93,9 @@ public class REVIMU {
             rightSpeed = 0.0;
             onTarget = true;
         } else {
-            steer = getSteer(error, PCoeff); rightSpeed = speed * steer; leftSpeed = -rightSpeed;
+            steer = getSteer(error, PCoeff);
+            rightSpeed = speed * steer;
+            leftSpeed = -rightSpeed;
         }
         // Send desired speeds to motors.
         robot.leftFrontMotor.setPower(leftSpeed);
