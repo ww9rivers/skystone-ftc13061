@@ -35,6 +35,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 
@@ -69,6 +70,9 @@ public class RobotConfig implements MecanumDrive
 
     public Servo            leftClaw        = null;
     public Servo            rightClaw       = null;
+    public Servo            puller1         = null;
+    public Servo            puller2         = null;
+    public TouchSensor      digitalTouch    = null;
     public ColorSensor      sensorColor     = null;
     public DistanceSensor   sensorDistance  = null;
     public ElapsedTime      runtime         = new ElapsedTime();
@@ -80,7 +84,7 @@ public class RobotConfig implements MecanumDrive
 
 
     static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // eg: TETRIX Motor Encoder
-    static final double     DRIVE_GEAR_REDUCTION    = 0.823 ;     // This is < 1.0 if geared UP
+    static final double     DRIVE_GEAR_REDUCTION    = 1.175 ;     // This is < 1.0 if geared UP
     static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
@@ -111,6 +115,14 @@ public class RobotConfig implements MecanumDrive
         rightFrontMotor = get_motor("right_front_motor", DcMotor.Direction.FORWARD);
         leftRearMotor = get_motor("left_rear_motor", DcMotor.Direction.REVERSE);
         rightRearMotor = get_motor("right_rear_motor", DcMotor.Direction.FORWARD);
+
+        puller1 = hwMap.get(Servo.class, "servo3");
+        puller2 = hwMap.get(Servo.class, "servo4");
+//        puller1.setPosition(0.0);
+//       puller2.setPosition(0.0);
+        // get a reference to our digitalTouch object.
+   //     digitalTouch = hwMap.touchSensor.get("sensor_digital");
+
 
         if(leftFrontMotor == null){
             app.telemetry.addData("LeftFrontMotor", "LeftFrontMotor is null");
@@ -286,7 +298,7 @@ public class RobotConfig implements MecanumDrive
         newLeftFrontTarget = leftFrontMotor.getCurrentPosition() - (int)((distanceInInches * COUNTS_PER_INCH) * Math.cos(robotAngle));
         newRightFrontTarget = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
         newLeftRearTarget = leftFrontMotor.getCurrentPosition() - (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
-        newRightRearTarget = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
+        newRightRearTarget = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.cos(robotAngle));
 
         leftFrontMotor.setTargetPosition(newLeftFrontTarget);
         rightFrontMotor.setTargetPosition(newRightFrontTarget);
@@ -323,18 +335,73 @@ public class RobotConfig implements MecanumDrive
             app.telemetry.update();
         }
 
-        // Stop all motion;
-        leftFrontMotor.setPower(0);
-        rightFrontMotor.setPower(0);
-        leftRearMotor.setPower(0);
-        rightRearMotor.setPower(0);
-
         // Turn off RUN_TO_POSITION
-        leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robotReset();
+            //  sleep(250);   // optional pause after each move
+    }
 
+    public void encoderDriveWithTouchSensor(double speed,
+                                            double angle,
+                                            double distanceInInches,
+                                            double timeoutS) {
+
+        int newLeftFrontTarget;
+        int newRightFrontTarget;
+        int newLeftRearTarget;
+        int newRightRearTarget;
+
+        // Ensure that the opmode is still active
+            // Determine new target position, and pass to motor controller
+            // Turn On RUN_TO_POSITION
+        double robotAngle =  Math.toRadians(angle) - Math.PI / 4;
+
+        newLeftFrontTarget = leftFrontMotor.getCurrentPosition() - (int)((distanceInInches * COUNTS_PER_INCH) * Math.cos(robotAngle));
+        newRightFrontTarget = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
+        newLeftRearTarget = leftFrontMotor.getCurrentPosition() - (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
+        newRightRearTarget = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.cos(robotAngle));
+
+        leftFrontMotor.setTargetPosition(newLeftFrontTarget);
+        rightFrontMotor.setTargetPosition(newRightFrontTarget);
+        leftRearMotor.setTargetPosition(newLeftRearTarget);
+        rightRearMotor.setTargetPosition(newRightRearTarget);
+
+        leftFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+        // reset the timeout time and start motion.
+        runtime.reset();
+        leftFrontMotor.setPower(Math.abs(speed));
+        rightFrontMotor.setPower(Math.abs(speed));
+        leftRearMotor.setPower(Math.abs(speed));
+        rightRearMotor.setPower(Math.abs(speed));
+
+        // keep looping while we are still active, and there is time left, and both motors are running.
+        // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
+        // its target position, the motion will stop.  This is "safer" in the event that the robot will
+        // always end the motion as soon as possible.
+        // However, if you require that BOTH motors have finished their moves before the robot continues
+        // onto the next step, use (isBusy() || isBusy()) in the loop test.
+        while ((runtime.seconds() < timeoutS) &&
+                (leftFrontMotor.isBusy() && rightFrontMotor.isBusy())) {
+
+            // Display it for the driver.
+            app.telemetry.addData("Path1",  "Running to %7d: %7f", (int)distanceInInches,  angle);
+            app.telemetry.addData("Path2",  "Running at %7d :%7d",
+                    leftFrontMotor.getCurrentPosition(),
+                    rightFrontMotor.getCurrentPosition());
+            app.telemetry.update();
+            if (digitalTouch.isPressed()) {
+                // Stop all motion;
+                robotReset();
+                return;
+            }
+
+        }
+
+        robotReset();
             //  sleep(250);   // optional pause after each move
     }
 
@@ -391,17 +458,8 @@ public class RobotConfig implements MecanumDrive
             app.telemetry.update();
         }
 
-        // Stop all motion;
-        leftFrontMotor.setPower(0);
-        rightFrontMotor.setPower(0);
-        leftRearMotor.setPower(0);
-        rightRearMotor.setPower(0);
-
         // Turn off RUN_TO_POSITION
-        leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robotReset();
 
         //  sleep(250);   // optional pause after each move
     }
@@ -428,4 +486,33 @@ public class RobotConfig implements MecanumDrive
     public void stop () {
         drive(0,0,0,0);
     }
+
+    public final void sleep(long milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void robotReset(){
+
+        // Stop all motion;
+        leftFrontMotor.setPower(0);
+        rightFrontMotor.setPower(0);
+        leftRearMotor.setPower(0);
+        rightRearMotor.setPower(0);
+
+        leftRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+    }
+
 }

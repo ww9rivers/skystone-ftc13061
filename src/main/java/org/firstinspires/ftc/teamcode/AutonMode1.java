@@ -93,8 +93,17 @@ public class AutonMode1 extends OpMode {
      */
     private void move_foundation () {
 
-        robot.encoderDrive(DRIVE_SPEED, 180, 12, 3);
-        robot.encoderDrive(DRIVE_SPEED, 270, 18, 3);
+        robot.encoderDrive(DRIVE_SPEED,  180, 24,  3);  // S1: Forward 47 Inches with 5 Sec timeout
+        //       encoderDriveWithTouchSensor(DRIVE_SPEED,  -90, 16,  15);  // S1: Forward 47 Inches with 5 Sec timeout
+        robot.encoderDriveWithTouchSensor(DRIVE_SPEED,  -90, 35,  15);  // S1: Forward 47 Inches with 5 Sec timeout
+        robot.puller1.setPosition(0.5);
+        robot.puller2.setPosition(0.5);
+        robot.sleep(1000);  // optional pause after each move
+        robot.encoderDrive(DRIVE_SPEED,  90, 30,  15);  // S1: Forward 47 Inches with 5 Sec timeout
+        robot.puller1.setPosition(0.);
+        robot.puller2.setPosition(0.);
+        robot.sleep(1000);   // optional pause after each move
+        robot.encoderDrive(DRIVE_SPEED,  0, 50,   15);
         telemetry.addData("Status", "Moving foundation");
     }
 

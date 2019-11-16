@@ -110,7 +110,9 @@ public class AutoFoundationRed extends LinearOpMode {
         leftRearMotor  = hardwareMap.get(DcMotor.class, "left_rear_motor");
         rightRearMotor = hardwareMap.get(DcMotor.class, "right_rear_motor");
 
-        leftRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robotReset();
+
+/*        leftRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -119,7 +121,7 @@ public class AutoFoundationRed extends LinearOpMode {
         rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
+*/
         puller1 = hardwareMap.get(Servo.class, "servo3");
         puller2 = hardwareMap.get(Servo.class, "servo4");
         puller1.setPosition(0.0);
@@ -143,19 +145,16 @@ public class AutoFoundationRed extends LinearOpMode {
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
 
         encoderDrive(DRIVE_SPEED,  180, 24,  3);  // S1: Forward 47 Inches with 5 Sec timeout
-        reset();
- //       encoderDriveWithTouchSensor(DRIVE_SPEED,  -90, 16,  15);  // S1: Forward 47 Inches with 5 Sec timeout
-        encoderDrive(DRIVE_SPEED,  -90, 35,  15);  // S1: Forward 47 Inches with 5 Sec timeout
-        reset();
+        encoderDriveWithTouchSensor(DRIVE_SPEED,  -90, 35,  15);  // S1: Forward 47 Inches with 5 Sec timeout
+ //       encoderDrive(DRIVE_SPEED,  -90, 35,  15);  // S1: Forward 47 Inches with 5 Sec timeout
         puller1.setPosition(0.5);
         puller2.setPosition(0.5);
         sleep(1000);   // optional pause after each move
-        encoderDrive(DRIVE_SPEED,  90, 30,  15);  // S1: Forward 47 Inches with 5 Sec timeout
-        reset();
+        encoderDrive(DRIVE_SPEED,  90, 33,  15);  // S1: Forward 47 Inches with 5 Sec timeout
         puller1.setPosition(0);
         puller2.setPosition(0);
         sleep(1000);   // optional pause after each move
-        encoderDrive(DRIVE_SPEED,  0, 50,  10);  // S1: Forward 47 Inches with 5 Sec timeout
+        encoderDrive(DRIVE_SPEED,  0, 55,  10);  // S1: Forward 47 Inches with 5 Sec timeout
 //        encoderDrive(TURN_SPEED,   90,12, -12, 4.0);  // S2: Turn Right 12 Inches with 4 Sec timeout
 //        encoderDrive(DRIVE_SPEED, 90,-25, -25, 4.0);  // S3: Reverse 24 Inches with 4 Sec timeout
 
@@ -233,18 +232,7 @@ public class AutoFoundationRed extends LinearOpMode {
                 telemetry.update();
             }
 
-            // Stop all motion;
-            leftFrontMotor.setPower(0);
-            rightFrontMotor.setPower(0);
-            leftRearMotor.setPower(0);
-            rightRearMotor.setPower(0);
-
-            // Turn off RUN_TO_POSITION
-            leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
+            robotReset();
             sleep(250);   // optional pause after each move
         }
     }
@@ -325,20 +313,8 @@ public class AutoFoundationRed extends LinearOpMode {
                 }
 
             }
-
-            // Stop all motion;
-            leftFrontMotor.setPower(0);
-            rightFrontMotor.setPower(0);
-            leftRearMotor.setPower(0);
-            rightRearMotor.setPower(0);
-
-            // Turn off RUN_TO_POSITION
-            leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-            //  sleep(250);   // optional pause after each move
+            robotReset();
+            sleep(250);   // optional pause after each move
         }
     }
 
@@ -397,24 +373,18 @@ public class AutoFoundationRed extends LinearOpMode {
                         rightFrontMotor.getCurrentPosition());
                 telemetry.update();
             }
-
-            // Stop all motion;
-            leftFrontMotor.setPower(0);
-            rightFrontMotor.setPower(0);
-            leftRearMotor.setPower(0);
-            rightRearMotor.setPower(0);
-
-            // Turn off RUN_TO_POSITION
-            leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
+            robotReset();
             //  sleep(250);   // optional pause after each move
         }
     }
 
-    private void reset(){
+    private void robotReset(){
+
+        leftFrontMotor.setPower(0);
+        rightFrontMotor.setPower(0);
+        leftRearMotor.setPower(0);
+        rightRearMotor.setPower(0);
+
         leftRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);

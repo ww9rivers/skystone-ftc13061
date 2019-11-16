@@ -136,7 +136,7 @@ public class Mecannum_Test extends LinearOpMode {
                 elbow.setPosition(elbowPos);
             }
 
-            if(gamepad2.b)
+            if(gamepad2.y)
             {
                 armPos = TRAVEL_POS1_NoLoad;
                 elbowPos = TRAVEL_POS_2;
