@@ -6,9 +6,11 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 @TeleOp(name="Mecanum Proto Manual", group="Test")
 public class TestMecanumDrive extends LinearOpMode {
-    @Override
+
+    RobotConfig robot = null;
+
     public void runOpMode() {
-        RobotConfig robot = RobotConfig.init(this, MecanumDrive.DriveMode.MANUAL);
+        robot = RobotConfig.init(this, MecanumDrive.DriveMode.MANUAL);
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 

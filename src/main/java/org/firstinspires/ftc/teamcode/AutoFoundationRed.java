@@ -145,16 +145,17 @@ public class AutoFoundationRed extends LinearOpMode {
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
 
         encoderDrive(DRIVE_SPEED,  180, 24,  3);  // S1: Forward 47 Inches with 5 Sec timeout
-        encoderDriveWithTouchSensor(DRIVE_SPEED,  -90, 35,  15);  // S1: Forward 47 Inches with 5 Sec timeout
+        encoderDriveWithTouchSensor(DRIVE_SPEED,  -90, 33,  15);  // S1: Forward 47 Inches with 5 Sec timeout
  //       encoderDrive(DRIVE_SPEED,  -90, 35,  15);  // S1: Forward 47 Inches with 5 Sec timeout
         puller1.setPosition(0.5);
         puller2.setPosition(0.5);
         sleep(1000);   // optional pause after each move
-        encoderDrive(DRIVE_SPEED,  90, 33,  15);  // S1: Forward 47 Inches with 5 Sec timeout
+        encoderDrive(DRIVE_SPEED,  90, 39,  15);  // S1: Forward 47 Inches with 5 Sec timeout
         puller1.setPosition(0);
         puller2.setPosition(0);
         sleep(1000);   // optional pause after each move
-        encoderDrive(DRIVE_SPEED,  0, 55,  10);  // S1: Forward 47 Inches with 5 Sec timeout
+        encoderDrive(DRIVE_SPEED,  -90, 1,  5);  // S1: Forward 47 Inches with 5 Sec timeout
+        encoderDrive(DRIVE_SPEED,  0, 57,  10);  // S1: Forward 47 Inches with 5 Sec timeout
 //        encoderDrive(TURN_SPEED,   90,12, -12, 4.0);  // S2: Turn Right 12 Inches with 4 Sec timeout
 //        encoderDrive(DRIVE_SPEED, 90,-25, -25, 4.0);  // S3: Reverse 24 Inches with 4 Sec timeout
 
@@ -222,7 +223,7 @@ public class AutoFoundationRed extends LinearOpMode {
             // onto the next step, use (isBusy() || isBusy()) in the loop test.
             while (opModeIsActive() &&
                    (runtime.seconds() < timeoutS) &&
-                   (leftFrontMotor.isBusy() && rightFrontMotor.isBusy())) {
+                    (leftFrontMotor.isBusy() || rightFrontMotor.isBusy() || leftRearMotor.isBusy() || rightRearMotor.isBusy())){
 
                 // Display it for the driver.
                 telemetry.addData("Path1",  "Running to %7d: %7f", (int)distanceInInches,  angle);
@@ -295,19 +296,9 @@ public class AutoFoundationRed extends LinearOpMode {
                 telemetry.update();
                 if (digitalTouch.isPressed()) {
                     // Stop all motion;
-                    leftFrontMotor.setPower(0);
-                    rightFrontMotor.setPower(0);
-                    leftRearMotor.setPower(0);
-                    rightRearMotor.setPower(0);
-
-                    // Turn off RUN_TO_POSITION
-                    leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    pullerPos = 0.5;
-                    puller1.setPosition(pullerPos);
-                    puller2.setPosition(pullerPos);
+                    telemetry.addData("TouchSensor",  "Touch sensor is pressed");
+                    telemetry.update();
+                    robotReset();
                     return;
 
                 }
