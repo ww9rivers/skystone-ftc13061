@@ -11,7 +11,7 @@ import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 import java.util.List;
 
-import static org.firstinspires.ftc.teamcode.Vuforia.*;
+import static org.firstinspires.ftc.teamcode.Robovu.*;
 
 public class ObjectDetector {
     private static final String TFOD_MODEL_ASSET = "Skystone.tflite";
@@ -28,7 +28,7 @@ public class ObjectDetector {
 
     private Telemetry telemetry = null;
 
-    public ObjectDetector (OpMode opmode) {
+    public ObjectDetector (OpMode opmode) throws Throwable {
         telemetry = opmode.telemetry;
         // The TFObjectDetector uses the camera frames from the VuforiaLocalizer, so we create that
         // first.
@@ -57,6 +57,11 @@ public class ObjectDetector {
         }
     }
 
+    /**
+     * Detect objects.
+     *
+     * @return A list of objects detected.
+     */
     public List<Recognition> detect () {
         List<Recognition> updatedRecognitions = null;
         if (tfod != null) {
@@ -75,9 +80,20 @@ public class ObjectDetector {
                     telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
                             recognition.getRight(), recognition.getBottom());
                 }
+                telemetry.update();
             }
         }
         return updatedRecognitions;
+    }
+
+    /**
+     * Check if a given object is a Skystone.
+     *
+     * @param xobj  An object recognition returned by detect().
+     * @return True, if the object is a Skystone.
+     */
+    public boolean is_skystone (Recognition xobj) {
+        return xobj.getLabel() == LABEL_SECOND_ELEMENT;
     }
 
     /**

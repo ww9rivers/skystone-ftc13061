@@ -1,16 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import org.firstinspires.ftc.teamcode.MecanumDrive;
 
-@TeleOp(name="Mecanum Proto Manual", group="Test")
-public class TestMecanumDrive extends LinearOpMode {
-
-    RobotConfig robot = null;
-
+@Autonomous(name="Mecanum auto SE", group="Test")
+public class TestMecanumSE extends LinearOpMode {
+    @Override
     public void runOpMode() {
-        robot = RobotConfig.init(this, MecanumDrive.DriveMode.MANUAL);
+        RobotConfig robot = RobotConfig.init(this);
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
@@ -19,9 +16,9 @@ public class TestMecanumDrive extends LinearOpMode {
         robot.start();
 
         // run until the end of the match (driver presses STOP)
-        while (this.opModeIsActive()) {
+        while (opModeIsActive()) {
             // Send values to the motors
-            robot.manual_drive();
+            robot.drive(Math.PI*7/4, robot.motorMax);
             robot.showtime();
         }
         robot.stop();

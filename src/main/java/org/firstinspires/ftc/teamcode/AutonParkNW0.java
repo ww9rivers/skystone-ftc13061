@@ -30,8 +30,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.util.Range;
-import org.firstinspires.ftc.teamcode.AutonMode2;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 /**
  * This file contains an example of an iterative (Non-Linear) "OpMode".
@@ -47,10 +46,70 @@ import org.firstinspires.ftc.teamcode.AutonMode2;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Auton: Red stone side 0", group="Iterative Opmode")
-public class AutonModeR2 extends AutonMode2
+@Autonomous(name="Auton Park: NW 0", group="Auton")
+public class AutonParkNW0 extends OpMode
 {
-    public AutonModeR2 () {
-        super(true);
+    // Declare OpMode members.
+    RobotConfig robot = null;
+    enum RobotMode {
+        GO_PARK,
+        PARKING,
+        STOP
+    };
+    RobotMode robot_mode = RobotMode.GO_PARK;
+    /*
+     * Code to run ONCE when the driver hits INIT
+     */
+    @Override
+    public void init() {
+        robot = RobotConfig.init(this);
+        // Tell the driver that initialization is complete.
+        telemetry.addData("Status", "Initialized");
+    }
+
+    /*
+     * Code to run REPEATEDLY after the driver hits INIT, but before they hit PLAY
+     */
+    @Override
+    public void init_loop() {
+    }
+
+    /*
+     * Code to run ONCE when the driver hits PLAY
+     */
+    @Override
+    public void start() {
+        robot.start();
+    }
+
+    /*
+     * Code to run REPEATEDLY after the driver hits PLAY but before they hit STOP
+     */
+    @Override
+    public void loop() {
+        switch (robot_mode) {
+            case GO_PARK:
+                robot.drive(Math.PI*13/4, robot.motorMax/2);
+                robot_mode = RobotMode.PARKING;
+                break;
+            case PARKING:
+                if (robot.runtime.seconds() < 4) {
+                    break;
+                }
+                robot.stop();
+                robot_mode = RobotMode.STOP;
+                break;
+            case STOP:
+                break;
+        }
+        robot.showtime();
+    }
+
+    /*
+     * Code to run ONCE after the driver hits STOP
+     */
+    @Override
+    public void stop() {
+        robot.stop();
     }
 }

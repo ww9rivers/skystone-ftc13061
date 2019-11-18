@@ -1,11 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
-
-import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
-import org.firstinspires.ftc.teamcode.AutonMode;
-
 /** AutonMode2: #2 Position - This is a library, not an OpMode
  *
  * This Autonomous opmode assumes that the robot starts in the Red position 1, on the side of the
@@ -20,7 +14,7 @@ import org.firstinspires.ftc.teamcode.AutonMode;
  * Reference: https://drive.google.com/open?id=1HdyA5MHN3-CSbFCGKsrEqOEmcXNH-F_7
  * Reference: org.firstinspires.ftc.robotcontroller.external.samples.PushbotAutoDrive*
  */
-public class AutonMode2 extends AutonMode {
+public class AutonFSM2 extends AutonMode {
     enum State {
         DETECT_STONE,
         TRANSPORT_STONE,
@@ -35,7 +29,7 @@ public class AutonMode2 extends AutonMode {
      *
      * @param isRed     True, if aliance color is RED.
      */
-    public AutonMode2 (boolean isRed) {
+    public AutonFSM2(boolean isRed) {
         super(isRed);
     }
 
