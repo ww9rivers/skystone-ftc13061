@@ -31,7 +31,7 @@ public class AutonFSM1 extends AutonMode {
         PARKING,
         STOP
     };
-    private State  robot_state;
+    private State  robot_state = State.STOP;
 
     /**
      * Constructor.
@@ -48,9 +48,11 @@ public class AutonFSM1 extends AutonMode {
      */
     @Override
     public void init_loop() {
-        robot_state = State.MOVE_FOUNDATION;
-        telemetry.addData(robot.STATUS, "Auton Mode 1: " + (aliance == Aliance.Color.RED ? "Red" : "Blue"));
-        telemetry.update();
+        if (robot_state == State.STOP) {
+            robot_state = State.MOVE_FOUNDATION;
+            telemetry.addData(robot.STATUS, "Auton Mode 1: " + (aliance == Aliance.Color.RED ? "Red" : "Blue"));
+            telemetry.update();
+        }
     }
 
     /*
@@ -67,11 +69,12 @@ public class AutonFSM1 extends AutonMode {
                 break;
             case PARKING:
                 parking_state = park();
-                return;
+                break;
             case STOP:
                 stop();
-                return;
+                break;
         }
+        telemetry.update();
     }
 
     /**
@@ -86,16 +89,19 @@ public class AutonFSM1 extends AutonMode {
     MovingFoundation moving_foundation_state = MovingFoundation.GOTO_FOUNDATION;
     double timer, travel;
     private MovingFoundation move_foundation () {
-        telemetry.addData(robot.STATUS, "Moving foundation");
         switch (moving_foundation_state) {
             case GOTO_FOUNDATION:
+                // The puller is on the rear end of the robot, so we start going reverse:
+                telemetry.addData(RobotConfig.STATUS, "Go to foundation");
                 travel = robot.runtime.milliseconds();
                 robot.drive_reverse();
                 return MovingFoundation.DETECT_FOUNDATION;
             case DETECT_FOUNDATION:
-                // Detect the foundation when the touch sensor is triggered:
-                if (robot.detect_touch()) {
-                    timer = robot.runtime.milliseconds();
+                // Detect the foundation when the touch sensor is triggered, or
+                // the robot has traveled more than 5 seconds: -- needs calibration
+                timer = robot.runtime.milliseconds();
+                if (robot.detect_touch() || timer-travel > 5000.0) {
+                    telemetry.addData(RobotConfig.STATUS, "Foundation (assumed) detected");
                     travel = timer - travel;
                     timer += 300; // waiting time for the puller to lower
                     robot.puller_down();
@@ -106,6 +112,7 @@ public class AutonFSM1 extends AutonMode {
                 if (robot.runtime.milliseconds() < timer) {
                     break;
                 }
+                telemetry.addData(RobotConfig.STATUS, "Pulling foundation");
                 robot.drive_forward();
                 travel += robot.runtime.milliseconds() + 5;
                 return MovingFoundation.PULL_FOUNDATION;
@@ -113,27 +120,12 @@ public class AutonFSM1 extends AutonMode {
                 if (robot.runtime.milliseconds() < travel) {
                     break;
                 }
+                telemetry.addData(RobotConfig.STATUS, "Done pulling foundation");
                 robot.puller_up();
                 robot_state = State.TRANSPORT_STONE;
                 return MovingFoundation.GOTO_FOUNDATION;
         }
         return moving_foundation_state;
-    }
-
-    private void linear_move_foundation () {
-
-        robot.encoderDrive(RobotConfig.DRIVE_SPEED,  180, 24,  3);  // S1: Forward 47 Inches with 5 Sec timeout
-        //       encoderDriveWithTouchSensor(DRIVE_SPEED,  -90, 16,  15);  // S1: Forward 47 Inches with 5 Sec timeout
-        robot.encoderDriveWithTouchSensor(RobotConfig.DRIVE_SPEED,  -90, 35,  15);  // S1: Forward 47 Inches with 5 Sec timeout
-        robot.puller1.setPosition(0.5);
-        robot.puller2.setPosition(0.5);
-        robot.sleep(1000);  // optional pause after each move
-        robot.encoderDrive(RobotConfig.DRIVE_SPEED,  90, 30,  15);  // S1: Forward 47 Inches with 5 Sec timeout
-        robot.puller1.setPosition(0.);
-        robot.puller2.setPosition(0.);
-        robot.sleep(1000);   // optional pause after each move
-        robot.encoderDrive(RobotConfig.DRIVE_SPEED,  0, 50,   15);
-        telemetry.addData("Status", "Moving foundation");
     }
 
     /**

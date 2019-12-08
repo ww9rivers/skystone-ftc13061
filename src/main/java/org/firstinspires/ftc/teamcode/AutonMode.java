@@ -84,6 +84,7 @@ public abstract class AutonMode extends OpMode {
         try {
             timer = new ElapsedTime();
             detector = new ObjectDetector(this);
+            robot.puller_down();    // As a visual test to see if the pullers are OK.
         } catch (Throwable ex) {
             ex.printStackTrace();
         }
@@ -98,6 +99,7 @@ public abstract class AutonMode extends OpMode {
     @Override
     public void start() {
         robot.start();
+        robot.puller_up();      // Was put down at INIT
     }
 
     /*

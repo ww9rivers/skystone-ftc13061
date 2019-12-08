@@ -38,7 +38,7 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
+import org.firstinspires.ftc.teamcode.REVIMU;
 
 /**
  * This is NOT an opmode. The purpose is to centralize all configuration in one spot.
@@ -61,7 +61,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  *
  * Reference: org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot
  */
-public class RobotConfig implements MecanumDrive
+public class RobotConfig extends MecanumDrive
 {
     /* local OpMode members. */
     HardwareMap hwMap       = null;
@@ -76,11 +76,6 @@ public class RobotConfig implements MecanumDrive
     // Hardware components
     //  Device for direction:
     protected REVIMU        imu = null;
-    //  Driving motors:
-    protected DcMotor       leftFrontMotor  = null;
-    protected DcMotor       leftRearMotor   = null;
-    protected DcMotor       rightFrontMotor = null;
-    protected DcMotor       rightRearMotor  = null;
 
     public Servo            leftClaw        = null;
     public Servo            rightClaw       = null;
@@ -91,27 +86,30 @@ public class RobotConfig implements MecanumDrive
     public DigitalChannel   touchSensor     = null;
     public ElapsedTime      runtime         = new ElapsedTime();
 
+    // NOTE: Different copy-and-pasted code use different names for these constants.
+    //       Use both sets, but still trying to keep things understandable.
     // https://www.reddit.com/r/FTC/comments/7s6y32/rev_hd_hex_motor_encoder_cpr/
-    private static final int ENCODER_CPR        = 1120;     // REV Hex HD Motor (REV-41-1301) CPR is 1120
-    private static final double ENCODER_CPT     = 1440;     // number of encoder clicks in a full turn
-    private static final double ENCODER_CPI     = 53.476;   // encoder clicks per inch
-    private static final double PULLER_DOWN     = 1.0;      // Maximum rotational position
+    private static final int ENCODER_CPR_HEXHD  = 1120;     // CPR of REV Hex HD Motor (REV-41-1301)
+    private static final int ENCODER_CPR_TETRIX = 1440;     // CPR of Tetrix DC motor
+    private static final int ENCODER_CPR        = ENCODER_CPR_HEXHD;    // We are using REV Hex HD motors
+    private static final double PULLER_DOWN     = 0.0;      // Maximum rotational position
     private static final double PULLER_UP       = 0.5;      // Maximum rotational position
     public static final double MID_SERVO        = 0.5 ;
     public static final double ARM_UP_POWER     = 0.45 ;
     public static final double ARM_DOWN_POWER   = -0.45 ;
-    static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // eg: TETRIX Motor Encoder
-    static final double     DRIVE_GEAR_REDUCTION    = 1.175 ;     // This is < 1.0 if geared UP
-    static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
-    static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+    static final double COUNTS_PER_MOTOR_REV    = ENCODER_CPR;  // REV Hex HD motor w/ encoder
+    static final double DRIVE_GEAR_REDUCTION    = 1.175 ;       // This is < 1.0 if geared UP
+    static final double WHEEL_DIAMETER_INCHES   = 4.0 ;         // For figuring circumference
+    static final double COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * Math.PI);
-    public static final double     DRIVE_SPEED             = 0.6;
-    public static final double     TURN_SPEED              = 0.5;
+    private static final double ENCODER_CPI     = COUNTS_PER_INCH;  // encoder counts per inch
+    public static final double DRIVE_SPEED      = 0.6;
+    public static final double TURN_SPEED       = 0.5;
 
     public static final String STATUS           = "Status";
     public static final String TOUCH_SENSOR     = "touch_sensor";
-    private static final String SERVOS[]       = {
-        "server0", "server1", "server2", "server5"
+    private static final String SERVOS[]        = {
+        "servo0", "servo1", "servo2", "servo3", "servo4", "servo5"
     };
     public static Servo servo[] = { null, null, null, null };
 
@@ -164,6 +162,7 @@ public class RobotConfig implements MecanumDrive
         } catch (Exception ex) {
             opmode.telemetry.addData("ERROR", ex.getMessage());
         }
+        imu = new REVIMU(this);
         opmode.telemetry.update();
     }
 
@@ -240,12 +239,11 @@ public class RobotConfig implements MecanumDrive
         return init(opmode, DriveMode.MANUAL);
     }
 
-    public void reset() {
-        leftFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
+    /**
+     * Stop and reset drive motor encoders.
+     */
+    public void reset_motor_encoder () {
+        set_drive_mode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     /**
@@ -520,11 +518,7 @@ public class RobotConfig implements MecanumDrive
         leftRearMotor.setTargetPosition(newLeftRearTarget);
         rightRearMotor.setTargetPosition(newRightRearTarget);
 
-        leftFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
+        set_drive_mode(DcMotor.RunMode.RUN_TO_POSITION);
 
         // reset the timeout time and start motion.
         runtime.reset();
@@ -577,17 +571,12 @@ public class RobotConfig implements MecanumDrive
         newLeftRearTarget = leftFrontMotor.getCurrentPosition() - (int)(angle*perimeter/360 * COUNTS_PER_INCH);
         newRightRearTarget = rightFrontMotor.getCurrentPosition() + (int)(-angle*perimeter/360 * COUNTS_PER_INCH);
 
-
         leftFrontMotor.setTargetPosition(newLeftFrontTarget);
         rightFrontMotor.setTargetPosition(newRightFrontTarget);
         leftRearMotor.setTargetPosition(newLeftRearTarget);
         rightRearMotor.setTargetPosition(newRightRearTarget);
 
-        leftFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
+        set_drive_mode(DcMotor.RunMode.RUN_TO_POSITION);
 
         // reset the timeout time and start motion.
         runtime.reset();
@@ -651,7 +640,7 @@ public class RobotConfig implements MecanumDrive
      */
     public void turn (double angle) {
         int[] mp = get_current_position();
-        int delta = (int) (angle * ENCODER_CPT);   // Fraction of a full turn
+        int delta = (int) (angle * ENCODER_CPR);   // Fraction of a full turn
         mp[0] += delta;
         mp[1] += delta;
         mp[2] += delta;
@@ -680,19 +669,8 @@ public class RobotConfig implements MecanumDrive
 
     private void robotReset () {
         // Stop all motion;
-        leftFrontMotor.setPower(0);
-        rightFrontMotor.setPower(0);
-        leftRearMotor.setPower(0);
-        rightRearMotor.setPower(0);
-
-        leftRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        pause();
+        reset_motor_encoder();
+        drive_using_encoder();
     }
 }

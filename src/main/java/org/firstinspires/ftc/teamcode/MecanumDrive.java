@@ -4,6 +4,8 @@
  */
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.hardware.DcMotor;
+
 /**
  * Team 13061 version 1.0.0
  * This program provides driver station control of the Team 9960 Mecanum Drive Prototype.
@@ -15,9 +17,15 @@ package org.firstinspires.ftc.teamcode;
  *
  */
 
-public interface MecanumDrive {
+public abstract class MecanumDrive {
 
     /* Declare OpMode members. */
+    //  Driving motors:
+    protected DcMotor leftFrontMotor  = null;
+    protected DcMotor leftRearMotor   = null;
+    protected DcMotor rightFrontMotor = null;
+    protected DcMotor rightRearMotor  = null;
+
     // operational constants
     double joyScale = 0.5;
     double motorMax = 1.0; // Limit motor power to this value for RUN_USING_ENCODER mode
@@ -27,11 +35,11 @@ public interface MecanumDrive {
     }
 
 
-    public void manual_drive();
-    public void encoderDrive(double speed,
-                             double angle,
-                             double distanceInInches,
-                             double timeoutS);
-    public void encoderTurn(double speed,
-                            double angle);
+    public abstract void manual_drive();
+    public abstract void encoderDrive(double speed,
+                                      double angle,
+                                      double distanceInInches,
+                                      double timeoutS);
+    public abstract void encoderTurn(double speed,
+                                     double angle);
 }

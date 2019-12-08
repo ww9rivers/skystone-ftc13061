@@ -47,7 +47,7 @@ import org.firstinspires.ftc.teamcode.AutonMode2;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Auton: Red stone side 0", group="Iterative Opmode")
+@Autonomous(name="Auton: Red stones 0", group="Auton")
 public class AutonModeR2 extends AutonMode2
 {
     public AutonModeR2 () {

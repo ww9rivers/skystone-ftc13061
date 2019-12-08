@@ -25,19 +25,8 @@ public class REVIMU {
     BNO055IMU imu = null;
     Orientation angles;
     Acceleration gravity;
-    static final double COUNTS_PER_MOTOR_REV = 1440 ; // eg: TETRIX Motor Encoder
-    static final double DRIVE_GEAR_REDUCTION = 2.0 ; // This is < 1.0 if geared UP
-    static final double WHEEL_DIAMETER_INCHES = 4.0 ; // For figuring circumference
-    static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCHES * 3.1415);
-    // These constants define the desired driving/control characteristics
-    // The can/should be tweaked to suite the specific robot drive train.
-    static final double DRIVE_SPEED = 0.3; // Nominal speed for better accuracy.
-    static final double TURN_SPEED = 0.5; // Nominal half speed for better accuracy.
-    static final double HEADING_THRESHOLD = 1 ; // As tight as we can make it with an integer gyro
-    static final double P_TURN_COEFF = 0.1; // Larger is more responsive, but also less stable
-    static final double P_DRIVE_COEFF = 0.15; // Larger is more responsive, but also less stable
 
-    public void init(RobotConfig bot) {
+    public REVIMU (RobotConfig bot) {
         // Set up the parameters with which we will use our IMU. Note that integration
         // algorithm here just reports accelerations to the logcat log; it doesn't actually
         // provide positional information.
@@ -70,45 +59,13 @@ public class REVIMU {
     }
 
     /**
-     * Perform one cycle of closed loop heading control.
+     * Get the first angle from the IMU.
      *
-     * @param speed Desired speed of turn.
-     * @param angle Absolute Angle (in Degrees) relative to last gyro reset.
-     *              0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
-     * If a relative angle is required, add/subtract from current heading.
-     * @param PCoeff Proportional Gain coefficient
      * @return
      */
-    boolean onHeading(double speed, double angle, double PCoeff) {
-        double error ;
-        double steer ;
-        boolean onTarget = false ;
-        double leftSpeed;
-        double rightSpeed;
-        // determine turn power based on +/- error
-        error = getError(angle);
-        if (Math.abs(error) <= HEADING_THRESHOLD) {
-            steer = 0.0;
-            leftSpeed = 0.0;
-            rightSpeed = 0.0;
-            onTarget = true;
-        } else {
-            steer = getSteer(error, PCoeff);
-            rightSpeed = speed * steer;
-            leftSpeed = -rightSpeed;
-        }
-        // Send desired speeds to motors.
-        robot.leftFrontMotor.setPower(leftSpeed);
-        robot.rightFrontMotor.setPower(rightSpeed);
-        robot.leftRearMotor.setPower(leftSpeed);
-        robot.rightRearMotor.setPower(rightSpeed);
-        // Display it for the driver.
-        telemetry.addData("Target", "%5.2f", angle);
-        telemetry.addData("Err/St", "%5.2f/%5.2f", error, steer);
-        telemetry.addData("Speed.", "%5.2f:%5.2f", leftSpeed, rightSpeed);
-        return onTarget;
+    public double get_angle () {
+        return imu.getAngularOrientation().firstAngle;
     }
-
     /**
      * getError determines the error between the target angle and the robot's current heading
      * @param targetAngle Desired angle (relative to global reference established at last Gyro Reset).
@@ -117,7 +74,7 @@ public class REVIMU {
      */
     public double getError(double targetAngle) {
         double robotError; // calculate error in -179 to +180 range
-        robotError = targetAngle - imu.getAngularOrientation().firstAngle;
+        robotError = targetAngle - get_angle();
         while (robotError > 180) robotError -= 360;
         while (robotError <= -180) robotError += 360;
         return robotError;
@@ -189,10 +146,30 @@ public class REVIMU {
                     }
                 });
     }
+
+    /**
+     * Format a given angle into text for display.
+     *
+     * @param angleUnit
+     * @param angle
+     * @return
+     */
     String formatAngle(AngleUnit angleUnit, double angle) {
         return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit , angle));
     }
+
+    /**
+     * Formatting the default angle for displaying.
+     *
+     * @return  The default angle in text
+     */
+    String formatAngle() {
+        return formatAngle(angles.angleUnit, angles.firstAngle);
+    }
     String formatDegrees(double degrees) {
         return String.format(Locale.getDefault(),"%.1f", AngleUnit.DEGREES.normalize(degrees));
+    }
+    public void startAccelerationIntegration (Position initalPosition, Velocity initialVelocity, int msPollInterval) {
+        imu.startAccelerationIntegration(initalPosition, initialVelocity, msPollInterval);
     }
 }
