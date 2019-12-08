@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
-@TeleOp(name="Mecanum Proto Manual", group="Test")
+@TeleOp(name="Mecanum: Manual Drive", group="Test")
 public class TestMecanumDrive extends LinearOpMode {
 
     RobotConfig robot = null;
@@ -22,7 +22,7 @@ public class TestMecanumDrive extends LinearOpMode {
         while (this.opModeIsActive()) {
             // Send values to the motors
             robot.manual_drive();
-            robot.showtime();
+//            robot.showtime();
         }
         robot.stop();
     }

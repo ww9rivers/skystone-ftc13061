@@ -65,7 +65,7 @@ public class REVIMU {
         composeTelemetry();
         telemetry.addData(">", "Robot Ready.");
         // telemetry.update();
-        robot.drive_using_encoder();
+//        robot.drive_using_encoder();
         // Wait for the game to start (Display Gyro value), and reset gyro before we move..
     }
 
