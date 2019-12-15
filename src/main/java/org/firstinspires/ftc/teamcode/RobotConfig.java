@@ -109,7 +109,7 @@ public class RobotConfig extends MecanumDrive
     public static final String STATUS           = "Status";
     public static final String TOUCH_SENSOR     = "touch_sensor";
     private static final String SERVOS[]        = {
-        "servo0", "servo1", "servo2", "servo3", "servo4", "servo5"
+        "servo0", "servo1", "servo2", "servo3", "servo4"
     };
     public static Servo servo[] = { null, null, null, null };
 
