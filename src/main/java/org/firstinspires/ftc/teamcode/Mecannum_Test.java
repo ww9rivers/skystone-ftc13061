@@ -93,6 +93,11 @@ public class Mecannum_Test extends LinearOpMode {
         rightFrontMotor = hardwareMap.get(DcMotor.class, "right_front_motor");
         leftRearMotor  = hardwareMap.get(DcMotor.class, "left_rear_motor");
         rightRearMotor = hardwareMap.get(DcMotor.class, "right_rear_motor");
+        leftFrontMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightFrontMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftRearMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightRearMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         arm = hardwareMap.get(Servo.class, "servo0");
         elbow = hardwareMap.get(Servo.class, "servo1");
         claw = hardwareMap.get(Servo.class, "servo2");
@@ -100,6 +105,8 @@ public class Mecannum_Test extends LinearOpMode {
         puller2 = hardwareMap.get(Servo.class, "servo4");
         puller1.setPosition(0.0);
         puller2.setPosition(0.0);
+
+
 
         float leftX, leftY;
 

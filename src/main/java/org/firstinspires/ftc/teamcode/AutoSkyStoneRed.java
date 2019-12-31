@@ -134,31 +134,20 @@ public class AutoSkyStoneRed extends LinearOpMode {
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
         nav.startTracking();
-        int timeoutS = 10;
-        while (opModeIsActive() &&
-                (runtime.seconds() < timeoutS) &&
-                (leftFrontMotor.isBusy() && rightFrontMotor.isBusy())) {
-            if(encoderDriveWithTracking(DRIVE_SPEED,  135, 15,  5)){ // find target
+        int timeoutS = 30;
+        encoderDrive(DRIVE_SPEED, 180, 36, 5);
+        encoderDrive(DRIVE_SPEED, 90, 12, 5);
+
+        if(encoderDriveWithTracking(DRIVE_SPEED*0.5,  0, 50,  15)){ // find target
                 // move to target
                 //grab stone
                 //cross bridge
                 //drop stone
                 // come back to bridge
-                break;
-            }
-
-            if(encoderDriveWithTracking(DRIVE_SPEED,  0, 50,  15)) { // find target
-
-
-
-                break;
-            }
-            // move to bridge
-            encoderDrive(DRIVE_SPEED,-45, 50,15);
         }
-
-
-
+        else
+            // move to bridge
+            encoderDrive(DRIVE_SPEED,0, 50,15);
 /*        // Provide feedback as to where the robot is located (if we know).
         if (targetVisible) {
             // express position (translation) of robot in inches.
@@ -236,7 +225,7 @@ public class AutoSkyStoneRed extends LinearOpMode {
             // onto the next step, use (isBusy() || isBusy()) in the loop test.
             while (opModeIsActive() &&
                     (runtime.seconds() < timeoutS) &&
-                    (leftFrontMotor.isBusy() && rightFrontMotor.isBusy())) {
+                    (leftFrontMotor.isBusy() || rightFrontMotor.isBusy() || leftRearMotor.isBusy() || rightRearMotor.isBusy())){
 
                 if (nav.findTarget() != null) {
                     robotReset();
@@ -304,7 +293,7 @@ public class AutoSkyStoneRed extends LinearOpMode {
             // onto the next step, use (isBusy() || isBusy()) in the loop test.
             while (opModeIsActive() &&
                    (runtime.seconds() < timeoutS) &&
-                   (leftFrontMotor.isBusy() && rightFrontMotor.isBusy())) {
+                    (leftFrontMotor.isBusy() || rightFrontMotor.isBusy() || leftRearMotor.isBusy() || rightRearMotor.isBusy())){
 
                 // Display it for the driver.
                 telemetry.addData("Path1",  "Running to %7d: %7f", (int)distanceInInches,  angle);
@@ -314,17 +303,7 @@ public class AutoSkyStoneRed extends LinearOpMode {
                 telemetry.update();
             }
 
-            // Stop all motion;
-            leftFrontMotor.setPower(0);
-            rightFrontMotor.setPower(0);
-            leftRearMotor.setPower(0);
-            rightRearMotor.setPower(0);
-
-            // Turn off RUN_TO_POSITION
-            leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robotReset();
 
             sleep(250);   // optional pause after each move
         }

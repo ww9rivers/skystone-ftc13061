@@ -36,7 +36,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.REVIMU;
 
@@ -54,9 +53,6 @@ import org.firstinspires.ftc.teamcode.REVIMU;
  * Motor channel: Right rear drive motor:    "right_rear_motor"
  * Motor channel: Left front drive motor:    "left_front_motor"
  * Motor channel: Right front drive motor:   "right_front_motor"
- * Motor channel: Manipulator drive motor:   "left_arm"
- * Servo channel: Servo to open left claw:   "left_hand"
- * Servo channel: Servo to open right claw:  "right_hand"
  * Color Sensor:  REV color/distance sensor: "colro_sencor"
  *
  * Reference: org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot
@@ -77,8 +73,9 @@ public class RobotConfig extends MecanumDrive
     //  Device for direction:
     protected REVIMU        imu = null;
 
-    public Servo            leftClaw        = null;
-    public Servo            rightClaw       = null;
+    public Servo            arm             = null;
+    public Servo            elbow           = null;
+    public Servo            claw            = null;
     public Servo            puller1         = null;
     public Servo            puller2         = null;
     public ColorSensor      colorSensor     = null;
@@ -86,6 +83,7 @@ public class RobotConfig extends MecanumDrive
     public DigitalChannel   touchSensor     = null;
     public ElapsedTime      runtime         = new ElapsedTime();
 
+<<<<<<< HEAD
     // NOTE: Different copy-and-pasted code use different names for these constants.
     //       Use both sets, but still trying to keep things understandable.
     // https://www.reddit.com/r/FTC/comments/7s6y32/rev_hd_hex_motor_encoder_cpr/
@@ -93,10 +91,18 @@ public class RobotConfig extends MecanumDrive
     private static final int ENCODER_CPR_TETRIX = 1440;     // CPR of Tetrix DC motor
     private static final int ENCODER_CPR        = ENCODER_CPR_HEXHD;    // We are using REV Hex HD motors
     private static final double PULLER_DOWN     = 0.0;      // Maximum rotational position
+=======
+    // https://www.reddit.com/r/FTC/commenats/7s6y32/rev_hd_hex_motor_encoder_cpr/
+    private static final int ENCODER_CPR        = 1120;     // REV Hex HD Motor (REV-41-1301) CPR is 1120
+    private static final double ENCODER_CPT     = 1440;     // number of encoder clicks in a full turn
+    private static final double ENCODER_CPI     = 53.476;   // encoder clicks per inch
+    private static final double PULLER_DOWN     = 1.0;      // Maximum rotational position
+>>>>>>> fsm/master
     private static final double PULLER_UP       = 0.5;      // Maximum rotational position
     public static final double MID_SERVO        = 0.5 ;
     public static final double ARM_UP_POWER     = 0.45 ;
     public static final double ARM_DOWN_POWER   = -0.45 ;
+<<<<<<< HEAD
     static final double COUNTS_PER_MOTOR_REV    = ENCODER_CPR;  // REV Hex HD motor w/ encoder
     static final double DRIVE_GEAR_REDUCTION    = 1.175 ;       // This is < 1.0 if geared UP
     static final double WHEEL_DIAMETER_INCHES   = 4.0 ;         // For figuring circumference
@@ -108,10 +114,25 @@ public class RobotConfig extends MecanumDrive
 
     public static final String STATUS           = "Status";
     public static final String TOUCH_SENSOR     = "touch_sensor";
+=======
+
+    private static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // eg: TETRIX Motor Encoder
+    private static final double     DRIVE_GEAR_REDUCTION    = 1.175 ;     // This is < 1.0 if geared UP
+    private static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
+    private static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+            (WHEEL_DIAMETER_INCHES * Math.PI);
+    public static final double     DRIVE_SPEED             = 0.7;
+    public static final double     TURN_SPEED              = 0.5;
+
+    public static final String STATUS           = "Status";
+    public static final String TOUCH_SENSOR     = "touch_sensor";
+    public static final String COLOR_SENSOR     = "color_sensor";
+    public static final int NUMBER_OF_SERVOS    = 5;
+>>>>>>> fsm/master
     private static final String SERVOS[]        = {
         "servo0", "servo1", "servo2", "servo3", "servo4"
     };
-    public static Servo servo[] = { null, null, null, null };
+    public static Servo servo[] = { null, null, null, null , null};
 
     /* Constructor - This is a singleton class. */
     private static RobotConfig theRobot = null;
@@ -123,18 +144,33 @@ public class RobotConfig extends MecanumDrive
 
         // Define and Initialize Motors
         // These polarities are for the Neverest 20 motors
-        leftFrontMotor = get_motor("left_front_motor", DcMotor.Direction.FORWARD);
-        rightFrontMotor = get_motor("right_front_motor", DcMotor.Direction.FORWARD);
-        leftRearMotor = get_motor("left_rear_motor", DcMotor.Direction.FORWARD);
-        rightRearMotor = get_motor("right_rear_motor", DcMotor.Direction.FORWARD);
+        try {
+            leftFrontMotor = get_motor("left_front_motor", DcMotor.Direction.REVERSE);
+            rightFrontMotor = get_motor("right_front_motor", DcMotor.Direction.FORWARD);
+            leftRearMotor = get_motor("left_rear_motor", DcMotor.Direction.REVERSE);
+            rightRearMotor = get_motor("right_rear_motor", DcMotor.Direction.FORWARD);
 
-        puller1 = hwMap.get(Servo.class, "servo3");
-        puller2 = hwMap.get(Servo.class, "servo4");
+            if (leftFrontMotor == null) {
+                app.telemetry.addData("LeftFrontMotor", "LeftFrontMotor is null");
+                app.telemetry.update();
+                return;
+            }
+        }catch (Exception ex) {
+            opmode.telemetry.addData("ERROR", "Missing Moters");
+        }
 
-        if(leftFrontMotor == null){
-            app.telemetry.addData("LeftFrontMotor", "LeftFrontMotor is null");
-            app.telemetry.update();
-            return;
+        // Define and initialize ALL installed servos.
+        try {
+            for (int i = 0; i < SERVOS.length; i++) {
+                servo[i] = hwMap.get(Servo.class, SERVOS[i]);
+            }
+            arm     = servo[0];
+            elbow   = servo[1];
+            claw    = servo[2];
+            puller1 = servo[3];
+            puller2 = servo[4];
+        } catch (Exception ex) {
+            opmode.telemetry.addData("ERROR", "Missing servo");
         }
 
         try {
@@ -144,21 +180,10 @@ public class RobotConfig extends MecanumDrive
             opmode.telemetry.addData("ERROR", "Missing " + TOUCH_SENSOR);
         }
 
-        // Define and initialize ALL installed servos.
-        try {
-            for (int i = 0; i < SERVOS.length; i++) {
-                servo[i] = hwMap.get(Servo.class, SERVOS[i]);
-            }
-            puller1 = servo[3];
-            puller2 = servo[4];
-        } catch (Exception ex) {
-            opmode.telemetry.addData("ERROR", "Missing servo");
-        }
-
         try {
             // The color sensor and the distance sensor are in the same device.
-            colorSensor = hwMap.get(ColorSensor.class, "color_sensor");
-            distanceSensor = hwMap.get(DistanceSensor.class, "color_sensor");
+            colorSensor = hwMap.get(ColorSensor.class, COLOR_SENSOR);
+//            distanceSensor = hwMap.get(DistanceSensor.class, "color_sensor");
         } catch (Exception ex) {
             opmode.telemetry.addData("ERROR", ex.getMessage());
         }
@@ -173,18 +198,17 @@ public class RobotConfig extends MecanumDrive
         if (is_motor_busy()) {
             return false;
         }
-        drive_using_encoder();
+        robotReset();
         return true;
     }
 
     /**
      * Get the current motor encoder positions.
      *
-     * @param mp    An array of 4 integers to host the positions.
      */
     // Motor encoder position
-    int[] mposition = {0, 0, 0, 0};
     public int[] get_current_position () {
+        int[] mposition = {0, 0, 0, 0};
         mposition[0] = leftFrontMotor.getCurrentPosition();
         mposition[1] = rightFrontMotor.getCurrentPosition();
         mposition[2] = leftRearMotor.getCurrentPosition();
@@ -199,16 +223,7 @@ public class RobotConfig extends MecanumDrive
             // Set the drive motor direction:
             // "Reverse" the motor that runs backwards when connected directly to the battery
             motor.setDirection(direction);
-            // Set the drive motor run modes:
-            // "RUN_USING_ENCODER" causes the motor to try to run at the specified fraction of full velocity
-            // Note: We were not able to make this run mode work until we switched Channel A and B encoder wiring into
-            // the motor controllers. (Neverest Channel A connects to MR Channel B input, and vice versa.)
-            if(driveMode == DriveMode.AUTO) {
-                motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            }
-            else
-                motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            resetDriveMode(motor);
             return motor;
         } catch (Exception ex) {
             app.telemetry.addData(STATUS, "Missing motor: "+name);
@@ -239,6 +254,7 @@ public class RobotConfig extends MecanumDrive
         return init(opmode, DriveMode.MANUAL);
     }
 
+<<<<<<< HEAD
     /**
      * Stop and reset drive motor encoders.
      */
@@ -251,6 +267,19 @@ public class RobotConfig extends MecanumDrive
      */
     public boolean detect_touch () {
         return touchSensor.getState();
+=======
+    private void resetDriveMode(DcMotor motor) {
+        // Set the drive motor run modes:
+        // "RUN_USING_ENCODER" causes the motor to try to run at the specified fraction of full velocity
+        // Note: We were not able to make this run mode work until we switched Channel A and B encoder wiring into
+        // the motor controllers. (Neverest Channel A connects to MR Channel B input, and vice versa.)
+        if(driveMode == DriveMode.AUTO) {
+            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+        else
+            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+>>>>>>> fsm/master
     }
 
     /**
@@ -267,11 +296,11 @@ public class RobotConfig extends MecanumDrive
         // Send values to the motors
         try {
             app.telemetry.addData("LF", "%.3f", lf);
-            leftFrontMotor.setPower(-lf);
+            leftFrontMotor.setPower(lf);
             app.telemetry.addData("RF", "%.3f", rf);
             rightFrontMotor.setPower(rf);
             app.telemetry.addData("LR", "%.3f", lr);
-            leftRearMotor.setPower(-lr);
+            leftRearMotor.setPower(lr);
             app.telemetry.addData("RR", "%.3f", rr);
             rightRearMotor.setPower(rr);
         } catch (Exception ex) {
@@ -341,21 +370,13 @@ public class RobotConfig extends MecanumDrive
      * @param morotPosition     Motor encoder positions.
      */
     public void drive_to (int morotPosition[]) {
-        // Turn On RUN_TO_POSITION
-        set_drive_mode(DcMotor.RunMode.RUN_TO_POSITION);
-
         // Set targets on all motors
         leftFrontMotor.setTargetPosition(morotPosition[0]);
         rightFrontMotor.setTargetPosition(morotPosition[1]);
         leftRearMotor.setTargetPosition(morotPosition[2]);
         rightRearMotor.setTargetPosition(morotPosition[3]);
-    }
-
-    /**
-     * Reset RUN_USING_ENCODER on all motors.
-     */
-    public void drive_using_encoder () {
-        set_drive_mode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // Turn On RUN_TO_POSITION
+        set_drive_mode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     /**
@@ -368,49 +389,6 @@ public class RobotConfig extends MecanumDrive
                 || rightFrontMotor.isBusy()
                 || leftRearMotor.isBusy()
                 || rightRearMotor.isBusy();
-    }
-    /**
-     * Manual drive using gamepad 1:
-     */
-    public void manual_drive () {
-        if (rightRearMotor == null) {
-            app.telemetry.addData("ERROR", "The robot is missing motor.");
-            return;
-        }
-
-        //     Changed joystick operation: use left joystick to control robot translation, use right joystick to control robot turn.
-        double leftX = app.gamepad1.left_stick_x;
-        double leftY = -app.gamepad1.left_stick_y;
-        double r = Math.hypot(leftX, leftY)*motorMax;
-        double robotAngle = Math.atan2(leftY, leftX) - Math.PI / 4;
-        double rightX = app.gamepad1.right_stick_x;
-        final double LF = r * Math.cos(robotAngle) + rightX;
-        final double RF = r * Math.sin(robotAngle) - rightX;
-        final double LR = r * Math.sin(robotAngle) + rightX;
-        final double RR = r * Math.cos(robotAngle) - rightX;
-        // Send values to the motors
-        drive(LF, RF, LR, RR);
-        // Send some useful parameters to the driver station
-        app.telemetry.addData("power", "x: (%.2f), y: (%.2f) angle: (%.2f)", leftX, leftY, robotAngle*180/Math.PI);
-        app.telemetry.update();
-    }
-
-    /**
-     * Pause the robot.
-     */
-    public void pause () {
-        drive(0, 0, 0, 0);
-    }
-    /**
-     * Set the pull server position to lower the puller to the foundation.
-     */
-    public void puller_down() {
-        puller1.setPosition(PULLER_DOWN);
-        puller2.setPosition(PULLER_DOWN);
-    }
-    public void puller_up() {
-        puller1.setPosition(PULLER_UP);
-        puller2.setPosition(PULLER_UP);
     }
 
     /**
@@ -425,6 +403,32 @@ public class RobotConfig extends MecanumDrive
         rightRearMotor.setMode(xmode);
     }
 
+
+    /**
+     * Manual drive using gamepad 1:
+     */
+    public void manual_drive () {
+        if(driveMode != DriveMode.MANUAL){
+            driveMode = DriveMode.MANUAL;
+            robotReset();
+        }
+        //     Changed joystick operation: use left joystick to control robot translation, use right joystick to control robot turn.
+        double leftX = app.gamepad1.left_stick_x;
+        double leftY = -app.gamepad1.left_stick_y;
+        double r = Math.hypot(leftX, leftY)*motorMax;
+        double robotAngle = Math.atan2(leftY, leftX) - Math.PI / 4;
+        double rightX = app.gamepad1.right_stick_x;
+        final double LF = r * Math.cos(robotAngle) + rightX;
+        final double RF = r * Math.sin(robotAngle) - rightX;
+        final double LR = r * Math.sin(robotAngle) + rightX;
+        final double RR = r * Math.cos(robotAngle) - rightX;
+        // Send values to the motors
+        drive(LF, RF, LR, RR);
+        // Send some useful parameters to the driver station
+        app.telemetry.addData("power", "x: (%.2f), y: (%.2f) angle: (%.2f)", leftX, leftY, robotAngle*180/Math.PI);
+        showtime();
+    }
+
     /*
      *  Method to perfmorm a relative move, based on encoder counts.
      *  Encoders are not reset as the move is based on the current position.
@@ -435,44 +439,28 @@ public class RobotConfig extends MecanumDrive
      */
     public void encoderDrive(double speed, double angle, double distanceInInches, double timeoutS) {
 
-        int newLeftFrontTarget;
-        int newRightFrontTarget;
-        int newLeftRearTarget;
-        int newRightRearTarget;
+        if(driveMode != DriveMode.AUTO) {
+            driveMode = DriveMode.AUTO;
+            robotReset();
+        }
+
+        int targetPosition[] = {0, 0, 0, 0};
 
         // Ensure that the opmode is still active
         // Determine new target position, and pass to motor controller
         // Turn On RUN_TO_POSITION
         double robotAngle =  Math.toRadians(angle) - Math.PI / 4;
 
-        if(leftFrontMotor == null){
-            app.telemetry.addData("LeftFrontMotor", "LeftFrontMotor is null");
-            app.telemetry.update();
-            return;
-        }
+        targetPosition[0] = leftFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH) * Math.cos(robotAngle));
+        targetPosition[1] = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
+        targetPosition[2] = leftFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
+        targetPosition[3] = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.cos(robotAngle));
 
-        newLeftFrontTarget = leftFrontMotor.getCurrentPosition() - (int)((distanceInInches * COUNTS_PER_INCH) * Math.cos(robotAngle));
-        newRightFrontTarget = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
-        newLeftRearTarget = leftFrontMotor.getCurrentPosition() - (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
-        newRightRearTarget = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.cos(robotAngle));
-
-        leftFrontMotor.setTargetPosition(newLeftFrontTarget);
-        rightFrontMotor.setTargetPosition(newRightFrontTarget);
-        leftRearMotor.setTargetPosition(newLeftRearTarget);
-        rightRearMotor.setTargetPosition(newRightRearTarget);
-
-        leftFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-
+        drive_to(targetPosition);
         // reset the timeout time and start motion.
         runtime.reset();
-        leftFrontMotor.setPower(Math.abs(speed));
-        rightFrontMotor.setPower(Math.abs(speed));
-        leftRearMotor.setPower(Math.abs(speed));
-        rightRearMotor.setPower(Math.abs(speed));
+        double power = Math.abs(speed);
+        drive(power,  power, power, power);
 
         // keep looping while we are still active, and there is time left, and both motors are running.
         // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
@@ -512,6 +500,7 @@ public class RobotConfig extends MecanumDrive
         newRightFrontTarget = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
         newLeftRearTarget = leftFrontMotor.getCurrentPosition() - (int)((distanceInInches * COUNTS_PER_INCH)* Math.sin(robotAngle));
         newRightRearTarget = rightFrontMotor.getCurrentPosition() + (int)((distanceInInches * COUNTS_PER_INCH)* Math.cos(robotAngle));
+
 
         leftFrontMotor.setTargetPosition(newLeftFrontTarget);
         rightFrontMotor.setTargetPosition(newRightFrontTarget);
@@ -611,7 +600,7 @@ public class RobotConfig extends MecanumDrive
      * Show run time.
      */
     public void showtime () {
-        app.telemetry.addData("Run Time", runtime.toString());
+        app.telemetry.addData("Run Time:", runtime.toString());
         app.telemetry.update();
     }
 
@@ -623,16 +612,25 @@ public class RobotConfig extends MecanumDrive
     }
 
     /**
+     * Pause the robot.
+     */
+    public void pause () {
+        drive(0, 0, 0, 0);
+    }
+
+    /**
      * Stop the robot.
      */
+
     public void stop () {
         theRobot = null;
         drive(0,0,0,0);
-        set_drive_mode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robotReset();
         app.telemetry.addData(STATUS, "Robot parked");
         app.telemetry.update();
     }
 
+<<<<<<< HEAD
     /**
      * Turn the robot a given angle: Positive to turn counter-clock wise.
      *
@@ -659,6 +657,8 @@ public class RobotConfig extends MecanumDrive
         turn_left(-power);
     }
 
+=======
+>>>>>>> fsm/master
     public final void sleep(long milliseconds) {
         try {
             Thread.sleep(milliseconds);
@@ -669,8 +669,45 @@ public class RobotConfig extends MecanumDrive
 
     private void robotReset () {
         // Stop all motion;
+<<<<<<< HEAD
         pause();
         reset_motor_encoder();
         drive_using_encoder();
+=======
+        leftFrontMotor.setPower(0);
+        rightFrontMotor.setPower(0);
+        leftRearMotor.setPower(0);
+        rightRearMotor.setPower(0);
+
+        resetDriveMode(leftFrontMotor);
+        resetDriveMode(rightFrontMotor);
+        resetDriveMode(leftRearMotor);
+        resetDriveMode(rightRearMotor);
     }
+
+
+    /**
+     * Set the pull server position to lower the puller to the foundation.
+     */
+    public void puller_down() {
+        puller1.setPosition(PULLER_DOWN);
+        puller2.setPosition(PULLER_DOWN);
+    }
+
+    public void puller_up() {
+        puller1.setPosition(PULLER_UP);
+        puller2.setPosition(PULLER_UP);
+    }
+
+
+    /**
+     * Return the state of the touch sensor.
+     */
+    public boolean detect_touch () {
+        return touchSensor.getState();
+>>>>>>> fsm/master
+    }
+
+
+
 }

@@ -36,6 +36,8 @@ public class AutonMode1 extends AutonMode {
         STOP
     };
     private State  robot_state;
+    static final double     DRIVE_SPEED             = 0.6;
+    static final double     TURN_SPEED              = 0.5;
 
     /**
      * Constructor.
@@ -173,7 +175,7 @@ public class AutonMode1 extends AutonMode {
         telemetry.update();
         switch (transport_state) {
             case TURN_SOUTH:
-                robot.turn(1/4);
+                robot.encoderTurn(TURN_SPEED, 1/4);
                 return TransportStoneState.TURN_SOURTH_WAIT;
             case TURN_SOURTH_WAIT:
                 if (robot.done_turning()) {
@@ -197,7 +199,7 @@ public class AutonMode1 extends AutonMode {
                 // TBD: if a stone is picked up
                 return TransportStoneState.TURN_NORTH;
             case TURN_NORTH:
-                robot.turn(1);
+                robot.encoderTurn(TURN_SPEED,1);
             case TURNING_NORTH:
                 if (robot.done_turning()) {
                     return TransportStoneState.DELIVER_STONE;
@@ -209,7 +211,7 @@ public class AutonMode1 extends AutonMode {
                 return TransportStoneState.DELIVERING;
             case DELIVERING:
                 if (robot.done_turning()) {
-                    robot.turn(1);
+                    robot.encoderTurn(TURN_SPEED, 1);
                     return TransportStoneState.TURNING_NORTH;
                 }
                 break;
