@@ -10,9 +10,9 @@ public class TestPullFoundation extends LinearOpMode {
         RobotConfig robot = RobotConfig.init(this, MecanumDrive.DriveMode.MANUAL);
 
         // Wait for the game to start (driver presses PLAY)
-        waitForStart();
         telemetry.addData("Status", "Press Start to test foundation pull");
         telemetry.update();
+        waitForStart();
         robot.start();
 
         // Send values to the motors
